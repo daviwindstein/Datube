@@ -175,7 +175,12 @@ async function carregarVideos(){
 
     lista.innerHTML += `
       <div class="video">
-        <video src="${v.url}" width="300" controls></video>
+       lista.innerHTML += `
+  <div class="video" onclick="abrirVideo('${doc.id}')">
+    <video src="${v.url}" width="300"></video>
+    <p>${v.titulo}</p>
+  </div>
+`;
         <p>${v.titulo}</p>
         <p>👤 ${v.dono}</p>
       </div>
@@ -247,4 +252,7 @@ window.onload = () => {
 
 </body>
 </html>
+function abrirVideo(id){
+  window.location.href = "video.html?id=" + id;
+}
 
