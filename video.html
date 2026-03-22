@@ -4,15 +4,15 @@
 <meta charset="UTF-8">
 <title>Datuber - Assistir Vídeo</title>
 <style>
-  body { background:#0f0f0f; color:#ddd; font-family:Arial, sans-serif; margin:0; padding:10px; }
+  body { background:#0f0f0f; color:#ddd; font-family:Arial, sans-serif; padding:10px; margin:0; }
   .container { display:flex; gap:20px; }
   .video-section { flex:2; }
-  .side { flex:1; }
+  .side { flex:1; padding-left:20px; border-left:1px solid #333; }
   video { width:100%; max-height:400px; border:1px solid #333; border-radius:4px; }
   button { background:#e33; border:none; color:white; padding:5px 10px; margin:5px 2px; cursor:pointer; border-radius:3px; }
   .comment { border-top:1px solid #444; padding:5px 0; }
-  .recommend { cursor:pointer; margin-bottom:10px; }
-  .recommend video { width:100%; max-height:100px; }
+  .recommend { cursor:pointer; margin-bottom:15px; }
+  .recommend video { width:100%; height:auto; }
 </style>
 </head>
 <body>
@@ -28,7 +28,7 @@
     <button id="inscreverBtn">Inscrever</button>
     <button id="likeBtn">Like (<span id="likes">0</span>)</button>
     <h3>Comentários</h3>
-    <input id="commentInput" placeholder="Escreva um comentário" style="width:80%;">
+    <input id="commentInput" placeholder="Escreva um comentário" style="width:80%; padding:5px; margin-top:5px;">
     <button onclick="comentar()">Postar</button>
     <div id="comentarios"></div>
   </div>
@@ -39,32 +39,31 @@
 </div>
 
 <script>
-// Carrega dados do vídeo atual
+// Recupera o usuário logado e os dados de vídeos
 let usuario = localStorage.getItem("usuario");
+let users = JSON.parse(localStorage.getItem("users") || "[]");
 let videos = JSON.parse(localStorage.getItem("videos") || "[]");
-let id = parseInt(localStorage.getItem("videoAtual"));
-if (isNaN(id) || !videos[id]) {
-  alert("Vídeo não encontrado."); window.location.href="index.html";
-}
+let id = parseInt(localStorage.getItem("videoAtual")); 
+if (isNaN(id) || !videos[id]) { alert("Vídeo não encontrado."); location.href="index.html"; }
 let v = videos[id];
 
-// Preenche o player e informações
+// Preenche player e informações do vídeo
 document.getElementById("player").src = v.url;
 document.getElementById("titulo").innerText = v.titulo;
 document.getElementById("canal").innerText = v.nomeDono;
 document.getElementById("canalFoto").src = v.fotoDono;
 document.getElementById("likes").innerText = v.likes;
 
-// Função de Like
+// Botão Like
 document.getElementById("likeBtn").onclick = () => {
   v.likes++;
   document.getElementById("likes").innerText = v.likes;
-  localStorage.setItem("videos", JSON.stringify(videos));
+  localStorage.setItem("videos", JSON.stringify(videos));  // atualiza likes
 };
 
-// Inscrever no canal
+// Botão Inscrever
 document.getElementById("inscreverBtn").onclick = () => {
-  if (!usuario) { alert("Faça login antes de se inscrever."); return; }
+  if (!usuario) { alert("Faça login para se inscrever."); return; }
   if (!v.inscritos.includes(usuario)) {
     v.inscritos.push(usuario);
     localStorage.setItem("videos", JSON.stringify(videos));
@@ -74,7 +73,7 @@ document.getElementById("inscreverBtn").onclick = () => {
   }
 };
 
-// Envio de comentário
+// Comentários
 function carregarComentarios() {
   let div = document.getElementById("comentarios");
   div.innerHTML = "";
@@ -93,11 +92,11 @@ function comentar() {
 }
 carregarComentarios();
 
-// Recomendações: mostra os outros vídeos
-let rec = document.getElementById("recomendados");
+// Recomendações (outros vídeos)
+let recDiv = document.getElementById("recomendados");
 videos.forEach((vid, i) => {
   if (i === id) return;
-  rec.innerHTML += `
+  recDiv.innerHTML += `
     <div class="recommend" onclick="abrirVideo(${i})">
       <video src="${vid.url}" muted></video>
       <p>${vid.titulo}</p>
@@ -105,7 +104,7 @@ videos.forEach((vid, i) => {
     </div>`;
 });
 
-// Abre canal ao clicar no nome/foto
+// Navegar para o canal ao clicar no nome/foto
 function abrirCanal() {
   localStorage.setItem("canalAtual", v.dono);
   window.location.href = "canal.html";
@@ -113,9 +112,9 @@ function abrirCanal() {
 document.getElementById("canal").onclick = abrirCanal;
 document.getElementById("canalFoto").onclick = abrirCanal;
 
-// Função para abrir outro vídeo recomendado
+// Abre outro vídeo recomendado
 window.abrirVideo = (i) => {
-  videos[i].views++;
+  videos[i].views = (videos[i].views || 0) + 1;
   localStorage.setItem("videos", JSON.stringify(videos));
   localStorage.setItem("videoAtual", i);
   location.reload();
