@@ -8,8 +8,7 @@ body { margin:0; font-family:Arial; background:#0f0f0f; color:white; }
 header { display:flex; justify-content:space-between; padding:10px; background:#202020; }
 input { padding:5px; }
 #videos { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; padding:10px; }
-.video { cursor:pointer; }
-.thumb { width:100%; border-radius:10px; }
+.video { cursor:pointer; border:1px solid #333; padding:5px; border-radius:5px; }
 .login-box { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#202020; padding:20px; display:none; flex-direction:column; }
 button { background:red; border:none; color:white; padding:5px; margin:2px; cursor:pointer; }
 </style>
@@ -36,71 +35,79 @@ button { background:red; border:none; color:white; padding:5px; margin:2px; curs
   <button onclick="fecharLogin()">Fechar</button>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-
-const firebaseConfig = { apiKey: "COLE_AQUI", projectId: "COLE_AQUI" };
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
-// ======= LOGIN =======
+<script>
+// ======= LOGIN SIMPLES LOCAL =======
 let usuario = localStorage.getItem("user") || null;
-window.abrirLogin = () => document.getElementById("loginBox").style.display="flex";
-window.fecharLogin = () => document.getElementById("loginBox").style.display="none";
 
-window.criarConta = async () => {
+function abrirLogin(){ document.getElementById("loginBox").style.display="flex"; }
+function fecharLogin(){ document.getElementById("loginBox").style.display="none"; }
+
+function criarConta(){
   let user = document.getElementById("user").value.trim();
   let pass = document.getElementById("pass").value.trim();
   if(!user || !pass){ alert("Preencha tudo!"); return; }
-  let q = await getDocs(collection(db,"users"));
-  for(let d of q.docs){ if(d.data().username===user) return alert("Já existe!"); }
-  await addDoc(collection(db,"users"), {username:user,password:pass});
+
+  let users = JSON.parse(localStorage.getItem("users")) || [];
+  if(users.find(u=>u.username===user)){ alert("Usuário já existe!"); return; }
+
+  users.push({username:user, password:pass});
+  localStorage.setItem("users", JSON.stringify(users));
   alert("Conta criada!");
 }
 
-window.fazerLogin = async () => {
+function fazerLogin(){
   let user = document.getElementById("user").value.trim();
   let pass = document.getElementById("pass").value.trim();
-  let q = await getDocs(collection(db,"users"));
-  for(let d of q.docs){ let u=d.data(); if(u.username===user && u.password===pass){ usuario=user; localStorage.setItem("user",user); fecharLogin(); return alert("Logado!"); } }
-  alert("Erro login!");
+  let users = JSON.parse(localStorage.getItem("users")) || [];
+  let u = users.find(u=>u.username===user && u.password===pass);
+  if(u){ usuario=user; localStorage.setItem("user",usuario); fecharLogin(); alert("Logado!"); carregarVideos(); }
+  else alert("Usuário ou senha incorretos!");
 }
 
 // ======= UPLOAD DE VÍDEO DO PC =======
-window.uploadVideo = () => {
+function uploadVideo(){
   if(!usuario){ alert("Faça login para postar!"); return; }
+
   let input = document.createElement("input");
-  input.type = "file"; input.accept="video/*"; input.click();
-  input.onchange = () => {
+  input.type="file"; input.accept="video/*"; input.click();
+
+  input.onchange = ()=>{
     let file = input.files[0];
-    if(!file){ alert("Nenhum vídeo escolhido"); return; }
-    let titulo = prompt("Título do vídeo:"); if(!titulo) titulo="Sem título";
+    if(!file){ alert("Nenhum vídeo selecionado!"); return; }
+
+    let titulo = prompt("Título do vídeo:");
+    if(!titulo) titulo="Sem título";
+
     let reader = new FileReader();
-    reader.onload = () => {
-      let url = reader.result; // base64
+    reader.onload = ()=>{
+      let url = reader.result;
+
       let videos = JSON.parse(localStorage.getItem("videos")) || [];
-      videos.push({titulo, url, dono:usuario});
+      videos.push({titulo:titulo, url:url, dono:usuario});
       localStorage.setItem("videos", JSON.stringify(videos));
+
       carregarVideos();
-      alert("Vídeo postado!");
+      alert("Vídeo postado com sucesso!");
     }
     reader.readAsDataURL(file);
   }
 }
 
-// ======= CARREGAR VÍDEOS NA PÁGINA =======
+// ======= CARREGAR VÍDEOS =======
 function carregarVideos(){
   const lista = document.getElementById("videos");
   lista.innerHTML="";
+
   let videos = JSON.parse(localStorage.getItem("videos")) || [];
+
   videos.forEach((v,i)=>{
     lista.innerHTML += `
-      <div class="video" onclick="abrirVideoLocal(${i})">
+      <div class="video" onclick="abrirVideo(${i})">
         <video src="${v.url}" width="300" controls></video>
         <p><b>${v.titulo}</b></p>
         <p>${v.dono}</p>
-      </div>`;
+      </div>
+    `;
   });
 }
 
@@ -113,17 +120,18 @@ document.getElementById("pesquisa").addEventListener("input",(e)=>{
   videos.forEach((v,i)=>{
     if(v.titulo.toLowerCase().includes(termo)){
       lista.innerHTML += `
-        <div class="video" onclick="abrirVideoLocal(${i})">
+        <div class="video" onclick="abrirVideo(${i})">
           <video src="${v.url}" width="300" controls></video>
           <p><b>${v.titulo}</b></p>
           <p>${v.dono}</p>
-        </div>`;
+        </div>
+      `;
     }
   });
 });
 
-// ======= ABRIR VÍDEO NA PÁGINA video.html =======
-window.abrirVideoLocal = (id)=>{
+// ======= ABRIR VIDEO NA PAGINA video.html =======
+function abrirVideo(id){
   localStorage.setItem("videoAtual", id);
   window.location.href="video.html";
 }
