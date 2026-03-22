@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Datuber</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<header>
+  <h1>📺 Datuber</h1>
+  <input placeholder="Pesquisar">
+</header>
+
+<div id="videos"></div>
+
+<script src="script.js"></script>
+</body>
+</html>
