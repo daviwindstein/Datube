@@ -2,149 +2,51 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Datuber</title>
+<title>Canal</title>
 <style>
-body { margin:0; font-family:Arial; background:#0f0f0f; color:white; }
-header { display:flex; justify-content:space-between; padding:10px; background:#202020; }
-input { padding:5px; width:200px; }
-#videos { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; padding:10px; }
+body { background:#0f0f0f; color:white; font-family:Arial; }
+.videos{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:10px;}
 .video { cursor:pointer; border:1px solid #333; padding:5px; border-radius:5px; }
-.video video { width:100%; border-radius:5px; }
-.login-box { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#202020; padding:20px; display:none; flex-direction:column; }
+video { width:100%; height:auto; border-radius:5px; }
 button { background:red; border:none; color:white; padding:5px; margin:2px; cursor:pointer; }
 </style>
 </head>
 <body>
-
-<header>
-  <h2>📺 Datuber</h2>
-  <input id="pesquisa" placeholder="Pesquisar vídeos...">
-  <div>
-    <button onclick="abrirLogin()">Login</button>
-    <button onclick="uploadVideo()">Postar</button>
-  </div>
-</header>
-
-<h3>📜 Todos os vídeos</h3>
-<div id="videos"></div>
-
-<!-- LOGIN -->
-<div class="login-box" id="loginBox">
-  <input id="user" placeholder="Usuário">
-  <input id="pass" type="password" placeholder="Senha">
-  <input id="nome" placeholder="Nome do canal">
-  <input id="foto" placeholder="URL da foto do canal">
-  <button onclick="fazerLogin()">Entrar</button>
-  <button onclick="criarConta()">Criar Conta</button>
-  <button onclick="fecharLogin()">Fechar</button>
-</div>
+<h1 id="nome"></h1>
+<img id="foto" width="50">
+<button id="inscreverBtn">Inscrever</button>
+<div class="videos" id="videos"></div>
 
 <script>
-let usuario = null;
-let users = [];
-let videos = [];
+let indexWindow = window.opener || window;
+let videos = indexWindow.videos || [];
+let users = indexWindow.users || [];
+let usuario = indexWindow.usuario;
+let canal = sessionStorage.getItem("canalAtual");
 
-// LOGIN UI
-window.abrirLogin = () => document.getElementById("loginBox").style.display = "flex";
-window.fecharLogin = () => document.getElementById("loginBox").style.display = "none";
+let user = users.find(u=>u.username===canal) || {nome:canal,foto:"https://via.placeholder.com/50"};
+document.getElementById("nome").innerText = user.nome;
+document.getElementById("foto").src = user.foto;
 
-// CRIAR CONTA
-window.criarConta = () => {
-  let user = document.getElementById("user").value.trim();
-  let pass = document.getElementById("pass").value.trim();
-  let nome = document.getElementById("nome").value.trim() || user;
-  let foto = document.getElementById("foto").value.trim() || "https://via.placeholder.com/50";
-
-  if(!user || !pass) return alert("Preencha tudo!");
-  if(users.find(u=>u.username===user)) return alert("Usuário já existe!");
-
-  users.push({username:user, password:pass, nome, foto});
-  alert("Conta criada!");
+// Inscrever
+document.getElementById("inscreverBtn").onclick = ()=>{
+  videos.forEach(v=>{if(v.dono===canal && !v.inscritos.includes(usuario)) v.inscritos.push(usuario)});
+  alert("Inscrito no canal!");
 };
 
-// LOGIN
-window.fazerLogin = () => {
-  let user = document.getElementById("user").value.trim();
-  let pass = document.getElementById("pass").value.trim();
-  let u = users.find(u=>u.username===user && u.password===pass);
-  if(u){
-    usuario=user;
-    fecharLogin();
-    alert("Logado!");
-  } else alert("Erro no login!");
-};
+// Mostra vídeos do canal
+let div = document.getElementById("videos");
+videos.filter(v=>v.dono===canal).forEach((v,i)=>{
+  div.innerHTML += `<div class="video" onclick="abrirVideo(${videos.indexOf(v)})">
+    <video src="${v.url}" muted></video>
+    <p>${v.titulo}</p>
+  </div>`;
+});
 
-// UPLOAD VÍDEO
-window.uploadVideo = () => {
-  if(!usuario){ alert("Faça login!"); return; }
-
-  let input = document.createElement("input");
-  input.type="file";
-  input.accept="video/*";
-  input.click();
-
-  input.onchange = ()=>{
-    let file = input.files[0];
-    if(!file) return alert("Nenhum vídeo escolhido");
-
-    let titulo = prompt("Título do vídeo:") || file.name;
-    let dono = users.find(u=>u.username===usuario);
-
-    let reader = new FileReader();
-    reader.onload = ()=>{
-      let novoVideo = {
-        titulo,
-        url: reader.result,
-        dono: usuario,
-        nomeDono: dono.nome,
-        fotoDono: dono.foto,
-        likes:0,
-        inscritos:[],
-        comentarios:[],
-        views:0,
-        data: Date.now()
-      };
-      // adiciona no fim da lista
-      videos.push(novoVideo);
-      carregarVideos();
-      alert(`Vídeo "${titulo}" postado!`);
-    };
-    reader.readAsDataURL(file);
-  }
-};
-
-// CARREGAR TODOS OS VÍDEOS
-function carregarVideos(term=""){
-  let lista = document.getElementById("videos");
-  lista.innerHTML = "";
-
-  let filtered = videos.filter(v=>v.titulo.toLowerCase().includes(term.toLowerCase()));
-
-  if(filtered.length==0) return lista.innerHTML="<p>Nenhum vídeo encontrado.</p>";
-
-  filtered.forEach((v,i)=>{
-    lista.innerHTML += `
-      <div class="video" onclick="abrirVideo(${i})">
-        <video src="${v.url}" muted></video>
-        <p><b>${v.titulo}</b></p>
-        <p>${v.nomeDono}</p>
-      </div>
-    `;
-  });
-}
-carregarVideos();
-
-// PESQUISA
-document.getElementById("pesquisa").oninput = (e)=>{
-  let termo = e.target.value;
-  carregarVideos(termo);
-};
-
-// ABRIR VÍDEO
-window.abrirVideo = (id)=>{
-  videos[id].views++;
-  sessionStorage.setItem("videoAtual",id);
-  window.location.href = "video.html";
+window.abrirVideo = (i)=>{
+  videos[i].views++;
+  sessionStorage.setItem("videoAtual",i);
+  location.href="video.html";
 };
 </script>
 </body>
