@@ -185,6 +185,10 @@ function carregarVideosLocal(){
     `;
   });
 }
+  window.abrirVideoLocal = (id) => {
+  localStorage.setItem("videoAtual", id);
+  window.location.href = "video.html";
+}
 
 </body>
 </html>
