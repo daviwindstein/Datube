@@ -102,8 +102,9 @@ button {
     <button onclick="uploadVideo()">📤 Postar</button>
   </div>
 </header>
- window.criarConta = async () => { ... }
+window.criarConta = async () => { ... }
 window.fazerLogin = async () => { ... }
+
   
   let user = document.getElementById("user").value.trim();
   let pass = document.getElementById("pass").value.trim();
@@ -130,7 +131,8 @@ window.fazerLogin = async () => { ... }
   alert("Conta criada!");
 }
 
-  window.fazerLogin = async () => {
+window.fazerLogin = async () => { ... }
+
   let user = document.getElementById("user").value.trim();
   let pass = document.getElementById("pass").value.trim();
 
@@ -302,7 +304,102 @@ window.abrirVideo = (id) => {
 carregarVideos();
 
 </script>
+<script type="module">
 
+window.criarConta = async () => {
+  let user = document.getElementById("user").value.trim();
+  let pass = document.getElementById("pass").value.trim();
+
+  if(!user || !pass){
+    alert("Preencha tudo!");
+    return;
+  }
+
+  let query = await getDocs(collection(db, "users"));
+
+  for (let doc of query.docs) {
+    if(doc.data().username === user){
+      alert("Usuário já existe!");
+      return;
+    }
+  }
+
+  await addDoc(collection(db, "users"), {
+    username: user,
+    password: pass
+  });
+
+  alert("Conta criada!");
+}
+
+window.fazerLogin = async () => {
+  let user = document.getElementById("user").value.trim();
+  let pass = document.getElementById("pass").value.trim();
+
+  if(!user || !pass){
+    alert("Preencha tudo!");
+    return;
+  }
+
+  let query = await getDocs(collection(db, "users"));
+
+  let encontrou = false;
+
+  for (let doc of query.docs) {
+    let data = doc.data();
+
+    if(data.username === user && data.password === pass){
+      encontrou = true;
+      localStorage.setItem("user", user);
+      usuario = user;
+
+      document.getElementById("loginBox").style.display = "none";
+      alert("Login feito!");
+      break;
+    }
+  }
+
+  if(!encontrou){
+    alert("Usuário ou senha errado!");
+  }
+}
+
+window.abrirCriarConta = () => {
+  document.getElementById("criarBox").style.display = "flex";
+}
+
+window.fecharCriar = () => {
+  document.getElementById("criarBox").style.display = "none";
+}
+
+window.criarContaNova = async () => {
+  let user = document.getElementById("novoUser").value.trim();
+  let pass = document.getElementById("novoPass").value.trim();
+
+  if(!user || !pass){
+    alert("Preencha tudo!");
+    return;
+  }
+
+  let query = await getDocs(collection(db, "users"));
+
+  for (let doc of query.docs) {
+    if(doc.data().username === user){
+      alert("Usuário já existe!");
+      return;
+    }
+  }
+
+  await addDoc(collection(db, "users"), {
+    username: user,
+    password: pass
+  });
+
+  alert("Conta criada! Agora faça login.");
+  fecharCriar();
+}
+
+</script>
 </body>
 </html>
 <script type="module">
