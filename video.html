@@ -105,7 +105,7 @@ window.abrirVideo = (id)=>{
 carregar();
 carregarComentarios();
 <script>
-// PEGAR ID DO VÍDEO SELECIONADO
+// NO video.html
 let id = localStorage.getItem("videoAtual");
 let videos = JSON.parse(localStorage.getItem("videos")) || [];
 
@@ -114,13 +114,6 @@ if(videos[id]){
   document.getElementById("player").src = v.url;
   document.getElementById("titulo").innerText = v.titulo;
   document.getElementById("canal").innerText = v.dono;
-} else {
-  document.getElementById("player").src = "";
-  document.getElementById("titulo").innerText = "Vídeo não encontrado";
-  document.getElementById("canal").innerText = "";
 }
-</script>
-</script>
-
 </body>
 </html>
