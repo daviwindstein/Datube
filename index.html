@@ -47,9 +47,9 @@ button { background:red; border:none; color:white; padding:5px; margin:2px; curs
 </div>
 
 <script>
+// ======= LOGIN =======
 let usuario = localStorage.getItem("user") || null;
 
-// ======= LOGIN =======
 function abrirLogin(){ document.getElementById("loginBox").style.display="flex"; }
 function fecharLogin(){ document.getElementById("loginBox").style.display="none"; }
 
@@ -92,7 +92,7 @@ function salvarPerfil(){
   carregarVideos();
 }
 
-// ======= UPLOAD DE VÍDEO (até 20 min) =======
+// ======= UPLOAD DE VÍDEO =======
 function uploadVideo(){
   if(!usuario){ alert("Faça login!"); return; }
   let input = document.createElement("input");
@@ -100,7 +100,8 @@ function uploadVideo(){
   input.onchange = ()=>{
     let file = input.files[0];
     if(!file){ alert("Nenhum vídeo selecionado"); return; }
-    if(file.size>1024*1024*2000){ alert("Máximo 20min"); return; } // Aproximado 20min
+    // Aproximado 20min
+    if(file.size>1024*1024*2000){ alert("Máximo 20min"); return; }
     let titulo = prompt("Título do vídeo:"); if(!titulo) titulo="Sem título";
     let reader = new FileReader();
     reader.onload=()=>{
