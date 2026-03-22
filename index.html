@@ -3,50 +3,17 @@
 <head>
 <meta charset="UTF-8">
 <title>Datuber</title>
-
 <style>
 body { margin:0; font-family:Arial; background:#0f0f0f; color:white; }
-
-header {
-  display:flex;
-  justify-content:space-between;
-  padding:10px;
-  background:#202020;
-}
-
+header { display:flex; justify-content:space-between; padding:10px; background:#202020; }
 input { padding:5px; }
-
-#videos {
-  display:grid;
-  grid-template-columns:repeat(4,1fr);
-  gap:10px;
-  padding:10px;
-}
-
+#videos { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; padding:10px; }
 .video { cursor:pointer; }
 .thumb { width:100%; border-radius:10px; }
-
-.login-box {
-  position:fixed;
-  top:50%; left:50%;
-  transform:translate(-50%,-50%);
-  background:#202020;
-  padding:20px;
-  display:none;
-  flex-direction:column;
-}
-
-button {
-  background:red;
-  border:none;
-  color:white;
-  padding:5px;
-  margin:2px;
-  cursor:pointer;
-}
+.login-box { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#202020; padding:20px; display:none; flex-direction:column; }
+button { background:red; border:none; color:white; padding:5px; margin:2px; cursor:pointer; }
 </style>
 </head>
-
 <body>
 
 <header>
@@ -70,122 +37,100 @@ button {
 </div>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "COLE_AQUI",
-  projectId: "COLE_AQUI"
-};
-
+const firebaseConfig = { apiKey: "COLE_AQUI", projectId: "COLE_AQUI" };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let usuario = localStorage.getItem("user");
+// ======= LOGIN =======
+let usuario = localStorage.getItem("user") || null;
+window.abrirLogin = () => document.getElementById("loginBox").style.display="flex";
+window.fecharLogin = () => document.getElementById("loginBox").style.display="none";
 
-// LOGIN UI
-window.abrirLogin = () => document.getElementById("loginBox").style.display = "flex";
-window.fecharLogin = () => document.getElementById("loginBox").style.display = "none";
-
-// CRIAR CONTA
 window.criarConta = async () => {
-  let user = userInput();
-  let pass = passInput();
-
-  if(!user || !pass) return alert("Preencha tudo!");
-
+  let user = document.getElementById("user").value.trim();
+  let pass = document.getElementById("pass").value.trim();
+  if(!user || !pass){ alert("Preencha tudo!"); return; }
   let q = await getDocs(collection(db,"users"));
-  for(let d of q.docs){
-    if(d.data().username === user) return alert("Já existe!");
-  }
-
-  await addDoc(collection(db,"users"), {username:user, password:pass});
+  for(let d of q.docs){ if(d.data().username===user) return alert("Já existe!"); }
+  await addDoc(collection(db,"users"), {username:user,password:pass});
   alert("Conta criada!");
 }
 
-// LOGIN
 window.fazerLogin = async () => {
-  let user = userInput();
-  let pass = passInput();
-
+  let user = document.getElementById("user").value.trim();
+  let pass = document.getElementById("pass").value.trim();
   let q = await getDocs(collection(db,"users"));
-  for(let d of q.docs){
-    let u = d.data();
-    if(u.username===user && u.password===pass){
-      usuario=user;
-      localStorage.setItem("user",user);
-      fecharLogin();
-      return alert("Logado!");
-    }
-  }
-
+  for(let d of q.docs){ let u=d.data(); if(u.username===user && u.password===pass){ usuario=user; localStorage.setItem("user",user); fecharLogin(); return alert("Logado!"); } }
   alert("Erro login!");
 }
-<script>
 
-  // POSTAR VÍDEO DO PC
+// ======= UPLOAD DE VÍDEO DO PC =======
 window.uploadVideo = () => {
-  if(!usuario){
-    alert("Faça login!");
-    return;
-  }
-
+  if(!usuario){ alert("Faça login para postar!"); return; }
   let input = document.createElement("input");
-  input.type = "file";
-  input.accept = "video/*";
-  input.click();
-
+  input.type = "file"; input.accept="video/*"; input.click();
   input.onchange = () => {
     let file = input.files[0];
-
-    if(!file){
-      alert("Nenhum vídeo escolhido");
-      return;
-    }
-
-    let titulo = prompt("Título do vídeo:");
-
+    if(!file){ alert("Nenhum vídeo escolhido"); return; }
+    let titulo = prompt("Título do vídeo:"); if(!titulo) titulo="Sem título";
     let reader = new FileReader();
-
     reader.onload = () => {
-      let url = reader.result; // vídeo em base64
-
-      // pegar vídeos existentes ou criar lista
+      let url = reader.result; // base64
       let videos = JSON.parse(localStorage.getItem("videos")) || [];
-
-      videos.push({
-        titulo: titulo,
-        url: url,
-        dono: usuario
-      });
-
+      videos.push({titulo, url, dono:usuario});
       localStorage.setItem("videos", JSON.stringify(videos));
-
+      carregarVideos();
       alert("Vídeo postado!");
-      carregarVideosLocal();
     }
-
     reader.readAsDataURL(file);
   }
 }
-  // CARREGAR VÍDEOS LOCAIS
-function carregarVideosLocal(){
-  let lista = document.getElementById("videos");
-  lista.innerHTML = "";
 
+// ======= CARREGAR VÍDEOS NA PÁGINA =======
+function carregarVideos(){
+  const lista = document.getElementById("videos");
+  lista.innerHTML="";
   let videos = JSON.parse(localStorage.getItem("videos")) || [];
-
-  videos.forEach((v, i) => {
+  videos.forEach((v,i)=>{
     lista.innerHTML += `
       <div class="video" onclick="abrirVideoLocal(${i})">
         <video src="${v.url}" width="300" controls></video>
-        <p>${v.titulo}</p>
+        <p><b>${v.titulo}</b></p>
         <p>${v.dono}</p>
-      </div>
-    `;
+      </div>`;
   });
 }
+
+// ======= PESQUISA =======
+document.getElementById("pesquisa").addEventListener("input",(e)=>{
+  const termo = e.target.value.toLowerCase();
+  const lista = document.getElementById("videos");
+  lista.innerHTML="";
+  let videos = JSON.parse(localStorage.getItem("videos")) || [];
+  videos.forEach((v,i)=>{
+    if(v.titulo.toLowerCase().includes(termo)){
+      lista.innerHTML += `
+        <div class="video" onclick="abrirVideoLocal(${i})">
+          <video src="${v.url}" width="300" controls></video>
+          <p><b>${v.titulo}</b></p>
+          <p>${v.dono}</p>
+        </div>`;
+    }
+  });
+});
+
+// ======= ABRIR VÍDEO NA PÁGINA video.html =======
+window.abrirVideoLocal = (id)=>{
+  localStorage.setItem("videoAtual", id);
+  window.location.href="video.html";
+}
+
+// ======= INICIAR =======
+window.addEventListener("load", carregarVideos);
+</script>
 
 </body>
 </html>
