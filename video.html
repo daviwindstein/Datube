@@ -34,15 +34,13 @@ button { background:red; border:none; color:white; padding:5px; margin:2px; curs
 </div>
 
 <script>
-let usuario = localStorage.getItem("user");
-let videos = JSON.parse(localStorage.getItem("videos")) || [];
-let users = JSON.parse(localStorage.getItem("users")) || [];
-let id = parseInt(localStorage.getItem("videoAtual"));
+let indexWindow = window.opener || window; // pega a lista de vídeos do index
+let videos = indexWindow.videos || [];
+let usuario = indexWindow.usuario;
+let id = parseInt(sessionStorage.getItem("videoAtual"));
 let v = videos[id];
-
 if(!v) alert("Vídeo não encontrado");
 
-// Exibe vídeo
 document.getElementById("player").src = v.url;
 document.getElementById("titulo").innerText = v.titulo;
 document.getElementById("canal").innerText = v.nomeDono;
@@ -52,7 +50,6 @@ document.getElementById("likes").innerText = v.likes;
 document.getElementById("likeBtn").onclick = ()=>{
   v.likes++;
   document.getElementById("likes").innerText = v.likes;
-  localStorage.setItem("videos",JSON.stringify(videos));
 };
 
 // Inscrever
@@ -60,7 +57,6 @@ let inscreverBtn = document.getElementById("inscreverBtn");
 inscreverBtn.onclick = ()=>{
   if(!v.inscritos.includes(usuario)) v.inscritos.push(usuario);
   alert("Inscrito!");
-  localStorage.setItem("videos",JSON.stringify(videos));
 };
 
 // Comentários
@@ -68,7 +64,6 @@ function comentar(){
   let texto = document.getElementById("commentInput").value.trim();
   if(!texto) return;
   v.comentarios.push({usuario,texto});
-  localStorage.setItem("videos",JSON.stringify(videos));
   document.getElementById("commentInput").value="";
   carregarComentarios();
 }
@@ -81,7 +76,7 @@ function carregarComentarios(){
 }
 carregarComentarios();
 
-// Recomendados (outros vídeos)
+// Recomendados
 let recomendados = document.getElementById("recomendados");
 videos.forEach((vid,i)=>{
   if(i===id) return;
@@ -90,11 +85,9 @@ videos.forEach((vid,i)=>{
 
 window.abrirVideo = (i)=>{
   videos[i].views++;
-  localStorage.setItem("videos",JSON.stringify(videos));
-  localStorage.setItem("videoAtual",i);
+  sessionStorage.setItem("videoAtual",i);
   location.reload();
 };
 </script>
 </body>
-</html>
 </html>
