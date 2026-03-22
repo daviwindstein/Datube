@@ -1,240 +1,164 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<title>Datuber - Página Inicial</title>
-<style>
-  body { margin:0; font-family:Arial, sans-serif; background:#0f0f0f; color:#ddd; }
-  header { display:flex; align-items:center; justify-content:space-between; padding:10px; background:#202020; }
-  input { padding:5px; width:200px; border-radius:4px; border:1px solid #444; }
-  #videos { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; padding:10px; }
-  .video { background:#181818; border:1px solid #333; padding:5px; border-radius:5px; cursor:pointer; }
-  .video video { width:100%; display:block; }
-  .highlight { border:2px solid gold; }
-  .login-box { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
-               background:#202020; padding:20px; display:none; flex-direction:column; }
-  .login-box input { margin:5px 0; padding:5px; border:1px solid #555; background:#2b2b2b; color:#ddd; }
-  button { background:#e33; border:none; color:white; padding:5px 10px; margin:2px; cursor:pointer; border-radius:3px; }
-</style>
-</head>
-<body>
-
-<header>
-  <h2>📺 Datuber</h2>
-  <input id="pesquisa" placeholder="Pesquisar vídeos...">
-  <div>
-    <button onclick="abrirLogin()">Login</button>
-    <button onclick="uploadVideo()">Postar</button>
-  </div>
-</header>
-
-<h3>📜 Todos os vídeos</h3>
-<div id="videos"></div>
-
-<!-- LOGIN / CADASTRO -->
-<div class="login-box" id="loginBox">
-  <input id="user" placeholder="Usuário">
-  <input id="pass" type="password" placeholder="Senha">
-  <input id="nome" placeholder="Nome do canal">
-  <input id="foto" placeholder="URL da foto do canal">
-  <button onclick="fazerLogin()">Entrar</button>
-  <button onclick="criarConta()">Criar Conta</button>
-  <button onclick="fecharLogin()">Fechar</button>
-</div>
-
-<script>
-// Carrega arrays de usuários e vídeos do localStorage (ou inicializa vazios)
-let usuario = localStorage.getItem("usuario");
-let users = JSON.parse(localStorage.getItem("users") || "[]");
-let videos = JSON.parse(localStorage.getItem("videos") || "[]");
-
-// Mostra/oculta a caixa de login
-window.abrirLogin = () => document.getElementById("loginBox").style.display = "flex";
-window.fecharLogin = () => document.getElementById("loginBox").style.display = "none";
-
-// Cria nova conta de usuário/canal
-function criarConta() {
-  let u = document.getElementById("user").value.trim();
-  let p = document.getElementById("pass").value;
-  let nomeCanal = document.getElementById("nome").value.trim() || u;
-  let foto = document.getElementById("foto").value.trim() || "https://via.placeholder.com/50";
-  if (!u || !p) { alert("Preencha usuário e senha!"); return; }
-  if (users.find(x => x.username === u)) { alert("Usuário já existe!"); return; }
-  users.push({username:u, password:p, nome:nomeCanal, foto:foto});
-  localStorage.setItem("users", JSON.stringify(users));  // Salva no localStorage【22†L264-L272】
-  alert("Conta criada com sucesso!");
-  fecharLogin();
-}
-
-// Autentica login
-function fazerLogin() {
-  let u = document.getElementById("user").value.trim();
-  let p = document.getElementById("pass").value;
-  let found = users.find(x => x.username===u && x.password===p);
-  if (found) {
-    usuario = u;
-    localStorage.setItem("usuario", u);
-    fecharLogin();
-    alert("Logado como " + found.nome);
-    carregarVideos();  // Atualiza UI se necessário
-  } else {
-    alert("Usuário ou senha inválidos!");
-  }
-}
-
-// Realiza upload do vídeo local
-function uploadVideo() {
-  if (!usuario) { alert("Faça login para postar."); return; }
-  let input = document.createElement("input");
-  input.type = "file"; input.accept = "video/*";
-  input.onchange = () => {
-    let file = input.files[0];
-    if (!file) return;
-    // Limite de tamanho (~200MB para ~20min)
-    if (file.size > 200*1024*1024) { alert("Vídeo muito grande (máx ~200MB)."); return; }
-    let reader = new FileReader();
-    reader.onload = () => {
-      let donoObj = users.find(x => x.username === usuario);
-      let novoVideo = {
-        titulo: prompt("Título do vídeo:", file.name) || file.name,
-        url: reader.result,  // Data URL gerado【15†L212-L220】
-        dono: usuario,
-        nomeDono: donoObj.nome,
-        fotoDono: donoObj.foto,
-        likes: 0,
-        inscritos: [],
-        comentarios: [],
-        views: 0,
-        data: Date.now()
-      };
-      videos.push(novoVideo);
-      localStorage.setItem("videos", JSON.stringify(videos));  // Salva no localStorage【22†L264-L272】
-      carregarVideos();  // Atualiza a lista exibida imediatamente
-      alert(`Vídeo "${novoVideo.titulo}" postado!`);
-    };
-    reader.readAsDataURL(file);
-  };
-  input.click();
-}
-
-// Carrega e renderiza vídeos (com filtro opcional)
-function carregarVideos(termo="") {
-  let container = document.getElementById("videos");
-  container.innerHTML = "";
-  let lista = videos.filter(v => v.titulo.toLowerCase().includes(termo.toLowerCase()));
-  if (lista.length === 0) {
-    container.innerHTML = "<p>Nenhum vídeo encontrado.</p>";
-    return;
-  }
-  // (Podemos destacar o mais recente/mais visto aqui, usando .highlight no CSS)
-  lista.forEach(v => {
-    let idx = videos.indexOf(v);
-    container.innerHTML += `
-      <div class="video" onclick="abrirVideo(${idx})">
-        <video src="${v.url}" muted></video>
-        <p><b>${v.titulo}</b></p>
-        <p>${v.nomeDono}</p>
-      </div>`;
-  });
-}
-
-// Busca em tempo real
-document.getElementById("pesquisa").oninput = e => {
-  carregarVideos(e.target.value);
-};
-
-// Inicializa lista ao carregar
-window.addEventListener("load", () => { carregarVideos(); });
-
-// Navega para página de vídeo
-function abrirVideo(id) {
-  videos[id].views = (videos[id].views || 0) + 1;
-  localStorage.setItem("videos", JSON.stringify(videos));  // Atualiza views
-  localStorage.setItem("videoAtual", id);
-  window.location.href = "video.html";
-}
-  <!DOCTYPE html>
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Upload Vídeo 20min</title>
+<title>Datuber</title>
+<style>
+body{background:#0f0f0f;color:white;font-family:Arial;margin:0;padding:0;}
+header{display:flex;justify-content:space-between;padding:10px;background:#202020;}
+#videos{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;padding:10px;}
+.video{cursor:pointer;background:#181818;padding:5px;border-radius:10px;}
+.video img, .video video{width:100%;border-radius:10px;}
+button{padding:5px;margin:2px;background:red;color:white;border:none;cursor:pointer;}
+</style>
 </head>
 <body>
-<h2>Upload de vídeo até 20 minutos</h2>
+<header>
+<h2>📺 Datuber</h2>
+<input id="pesquisa" placeholder="Pesquisar...">
+<div>
+<button onclick="abrirPerfil()">Meu Canal</button>
+<input type="file" id="thumbInput" accept="image/*">
 <input type="file" id="videoInput" accept="video/*">
 <button onclick="uploadVideo()">Postar</button>
+</div>
+</header>
 
-<h3>Vídeos Postados</h3>
 <div id="videos"></div>
 
 <script>
-// ABRINDO IndexedDB
 let db;
-let request = indexedDB.open("DatuberDB", 1);
-request.onupgradeneeded = (e) => {
+const request = indexedDB.open("DatuberDB",1);
+request.onupgradeneeded = e=>{
   db = e.target.result;
   if(!db.objectStoreNames.contains("videos")){
-    let store = db.createObjectStore("videos", { keyPath: "id", autoIncrement: true });
+    db.createObjectStore("videos",{keyPath:"id",autoIncrement:true});
+  }
+  if(!db.objectStoreNames.contains("usuarios")){
+    db.createObjectStore("usuarios",{keyPath:"username"});
   }
 };
-request.onsuccess = (e) => {
+request.onsuccess = e=>{
   db = e.target.result;
   carregarVideos();
+  carregarPerfil();
 };
 
-// FUNÇÃO DE UPLOAD
+// Configuração do usuário
+let usuario = localStorage.getItem("usuario") || "User" + Math.floor(Math.random()*1000);
+localStorage.setItem("usuario",usuario);
+
+// Upload do vídeo
 function uploadVideo(){
-  const input = document.getElementById("videoInput");
-  const file = input.files[0];
-  if(!file) return alert("Escolha um vídeo!");
+  const videoFile = document.getElementById("videoInput").files[0];
+  if(!videoFile) return alert("Escolha um vídeo!");
+  if(videoFile.size>3e9) return alert("Máximo 1 hora de vídeo!");
 
-  // Limite de 20 minutos = 1.2 GB aproximadamente (depende do codec)
-  if(file.size > 1.2e+9) return alert("Vídeo maior que 20 minutos!");
+  const thumbFile = document.getElementById("thumbInput").files[0];
+  if(!thumbFile) return alert("Escolha uma thumbnail!");
 
-  const reader = new FileReader();
-  reader.onload = () => {
-    const transaction = db.transaction(["videos"], "readwrite");
-    const store = transaction.objectStore("videos");
-    const video = {
-      titulo: file.name,
-      blob: reader.result,
-      data: Date.now()
-    };
-    store.add(video);
-    transaction.oncomplete = () => {
-      alert("Vídeo postado!");
-      carregarVideos();
+  const titulo = prompt("Título do vídeo:");
+  if(!titulo) return alert("Título necessário!");
+
+  const readerVideo = new FileReader();
+  const readerThumb = new FileReader();
+
+  readerVideo.onload = ()=>{
+    const videoData = readerVideo.result;
+    readerThumb.onload = ()=>{
+      const thumbData = readerThumb.result;
+      const tx = db.transaction(["videos"],"readwrite");
+      const store = tx.objectStore("videos");
+      store.add({
+        titulo,
+        video: videoData,
+        thumb: thumbData,
+        dono: usuario,
+        inscritos: 0,
+        data: Date.now()
+      });
+      tx.oncomplete = ()=>carregarVideos();
     }
-  };
-  reader.readAsArrayBuffer(file); // melhor para arquivos grandes
+    readerThumb.readAsDataURL(thumbFile);
+  }
+  readerVideo.readAsArrayBuffer(videoFile);
 }
 
-// CARREGAR VÍDEOS
+// Carregar vídeos na página inicial
 function carregarVideos(){
   const container = document.getElementById("videos");
-  container.innerHTML = "";
-  const transaction = db.transaction(["videos"], "readonly");
-  const store = transaction.objectStore("videos");
-  const request = store.openCursor(null, "prev"); // mais recentes primeiro
-  request.onsuccess = (e) => {
+  container.innerHTML="";
+  const tx = db.transaction(["videos"],"readonly");
+  const store = tx.objectStore("videos");
+  const requestCursor = store.openCursor(null,"prev"); // mais recentes primeiro
+  requestCursor.onsuccess = e=>{
     const cursor = e.target.result;
     if(cursor){
       const v = cursor.value;
-      const blob = new Blob([v.blob], {type:"video/mp4"});
+      const blob = new Blob([v.video],{type:"video/mp4"});
       const url = URL.createObjectURL(blob);
-      container.innerHTML += `
-        <div>
-          <video src="${url}" width="300" controls></video>
-          <p>${v.titulo}</p>
-        </div>
+      container.innerHTML+=`
+      <div class="video" onclick="abrirVideo(${v.id})">
+        <img src="${v.thumb}">
+        <p>${v.titulo}</p>
+        <p>${v.dono}</p>
+      </div>
       `;
       cursor.continue();
     }
   }
 }
-</script>
-</body>
-</html>
+
+// Abrir vídeo
+function abrirVideo(id){
+  localStorage.setItem("videoAtual",id);
+  window.location.href="video.html";
+}
+
+// Perfil do canal
+function abrirPerfil(){
+  window.location.href="canal.html?user="+usuario;
+}
+
+// Pesquisa
+document.getElementById("pesquisa").oninput = e=>{
+  const termo = e.target.value.toLowerCase();
+  const container = document.getElementById("videos");
+  container.innerHTML="";
+  const tx = db.transaction(["videos"],"readonly");
+  const store = tx.objectStore("videos");
+  const requestCursor = store.openCursor(null,"prev");
+  requestCursor.onsuccess = e=>{
+    const cursor = e.target.result;
+    if(cursor){
+      const v = cursor.value;
+      if(v.titulo.toLowerCase().includes(termo)){
+        const blob = new Blob([v.video],{type:"video/mp4"});
+        const url = URL.createObjectURL(blob);
+        container.innerHTML+=`
+        <div class="video" onclick="abrirVideo(${v.id})">
+          <img src="${v.thumb}">
+          <p>${v.titulo}</p>
+          <p>${v.dono}</p>
+        </div>
+        `;
+      }
+      cursor.continue();
+    }
+  }
+}
+
+// Carregar perfil (opcional, para inicializar)
+function carregarPerfil(){
+  const tx = db.transaction(["usuarios"],"readwrite");
+  const store = tx.objectStore("usuarios");
+  const req = store.get(usuario);
+  req.onsuccess = ()=>{
+    if(!req.result){
+      store.add({username:usuario, foto:"", inscritos:0});
+    }
+  }
+}
 </script>
 </body>
 </html>
