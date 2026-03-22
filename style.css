@@ -27,3 +27,20 @@ input {
 .video {
   cursor: pointer;
 }
+iframe {
+  width: 300px;
+  height: 180px;
+  border: none;
+}
+
+header {
+  position: relative;
+  z-index: 10;
+  background: #202020;
+}
+
+button {
+  position: relative;
+  z-index: 10;
+  cursor: pointer;
+}
