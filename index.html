@@ -212,6 +212,20 @@ window.abrirVideo = (id)=>{
 function userInput(){ return document.getElementById("user").value.trim(); }
 function passInput(){ return document.getElementById("pass").value.trim(); }
 
+  // NO video.html
+let id = localStorage.getItem("videoAtual");
+let videos = JSON.parse(localStorage.getItem("videos")) || [];
+
+if(videos[id]){
+  let v = videos[id];
+  document.getElementById("player").src = v.url;
+  document.getElementById("titulo").innerText = v.titulo;
+  document.getElementById("canal").innerText = v.dono;
+}
+  window.abrirVideoLocal = (id) => {
+  localStorage.setItem("videoAtual", id);
+  window.location.href = "video.html";
+}
 carregarVideos();
 
 </script>
