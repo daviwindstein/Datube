@@ -1,39 +1,61 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
 <meta charset="UTF-8">
 <title>Canal</title>
 <style>
-body{background:#0f0f0f;color:white;font-family:Arial;}
-.videos{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+body { background:#0f0f0f; color:white; font-family:Arial; margin:0; padding:10px; }
+h1 { margin:0; }
+.videos{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px;}
+.video { border:1px solid #333; padding:5px; border-radius:5px; display:flex; flex-direction:column; align-items:center; }
+.video video { width:100%; height:auto; }
+button { background:red; border:none; color:white; padding:5px; margin:2px; cursor:pointer; }
 </style>
 </head>
 <body>
 
-<h1 id="nome"></h1>
+<h1 id="nomeCanal"></h1>
+<img id="fotoCanal" src="" width="50" height="50" style="border-radius:50%;">
+<button id="inscreverBtn">Inscrever</button>
 <div class="videos" id="videos"></div>
 
 <script>
-// PEGAR CANAL
-let canal = new URLSearchParams(location.search).get("user");
-document.getElementById("nome").innerText = canal;
-
+let canal = localStorage.getItem("canalAtual");
 let videos = JSON.parse(localStorage.getItem("videos")) || [];
-const lista = document.getElementById("videos");
+let users = JSON.parse(localStorage.getItem("users")) || [];
+let userObj = users.find(u=>u.username===canal);
+document.getElementById("nomeCanal").innerText = userObj.nome;
+document.getElementById("fotoCanal").src = userObj.foto;
 
+// Inscrever
+let inscreverBtn = document.getElementById("inscreverBtn");
+inscreverBtn.onclick = ()=>{
+  if(!userObj.videos) userObj.videos = [];
+  videos.forEach(v=>{
+    if(v.dono===canal && !v.inscritos.includes(usuario)) v.inscritos.push(usuario);
+  });
+  localStorage.setItem("videos",JSON.stringify(videos));
+  alert("Inscrito no canal!");
+};
+
+// Mostrar vídeos do canal
+let lista = document.getElementById("videos");
 videos.forEach((v,i)=>{
-  if(v.dono === canal){
+  if(v.dono===canal){
     lista.innerHTML += `
-      <div class="video" onclick="abrirVideoLocal(${i})">
-        <video src="${v.url}" width="300" controls></video>
-        <p>${v.titulo}</p>
-      </div>`;
+      <div class="video">
+        <video src="${v.url}" controls></video>
+        <p><b>${v.titulo}</b></p>
+        <p>Likes: ${v.likes}</p>
+        <button onclick="abrirVideo(${i})">Assistir</button>
+      </div>
+    `;
   }
 });
 
-function abrirVideoLocal(id){
-  localStorage.setItem("videoAtual", id);
-  window.location.href = "video.html";
+function abrirVideo(i){
+  localStorage.setItem("videoAtual",i);
+  window.location.href="video.html";
 }
 </script>
 
