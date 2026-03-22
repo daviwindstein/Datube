@@ -102,7 +102,9 @@ button {
     <button onclick="uploadVideo()">📤 Postar</button>
   </div>
 </header>
-  window.criarConta = async () => {
+ window.criarConta = async () => { ... }
+window.fazerLogin = async () => { ... }
+  
   let user = document.getElementById("user").value.trim();
   let pass = document.getElementById("pass").value.trim();
 
@@ -303,18 +305,13 @@ carregarVideos();
 
 </body>
 </html>
-<button onclick="resetarLogin()">🔄 Resetar Login</button>
-window.abrirCriarConta = () => {
-  document.getElementById("criarBox").style.display = "flex";
-}
+<script type="module">
 
-window.fecharCriar = () => {
-  document.getElementById("criarBox").style.display = "none";
-}
+// 🔥 SEU CÓDIGO AQUI DENTRO
 
-window.criarContaNova = async () => {
-  let user = document.getElementById("novoUser").value.trim();
-  let pass = document.getElementById("novoPass").value.trim();
+window.criarConta = async () => {
+  let user = document.getElementById("user").value.trim();
+  let pass = document.getElementById("pass").value.trim();
 
   if(!user || !pass){
     alert("Preencha tudo!");
@@ -335,6 +332,40 @@ window.criarContaNova = async () => {
     password: pass
   });
 
-  alert("Conta criada! Agora faça login.");
-  fecharCriar();
+  alert("Conta criada!");
 }
+
+window.fazerLogin = async () => {
+  let user = document.getElementById("user").value.trim();
+  let pass = document.getElementById("pass").value.trim();
+
+  if(!user || !pass){
+    alert("Preencha tudo!");
+    return;
+  }
+
+  let query = await getDocs(collection(db, "users"));
+
+  let encontrou = false;
+
+  for (let doc of query.docs) {
+    let data = doc.data();
+
+    if(data.username === user && data.password === pass){
+      encontrou = true;
+      localStorage.setItem("user", user);
+      usuario = user;
+
+      document.getElementById("loginBox").style.display = "none";
+      alert("Login feito!");
+      break;
+    }
+  }
+
+  if(!encontrou){
+    alert("Usuário ou senha errado!");
+  }
+}
+
+</script>
+
