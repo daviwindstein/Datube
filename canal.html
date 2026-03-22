@@ -1,52 +1,63 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Canal</title>
+<title>Datuber - Canal</title>
 <style>
-body { background:#0f0f0f; color:white; font-family:Arial; }
-.videos{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:10px;}
-.video { cursor:pointer; border:1px solid #333; padding:5px; border-radius:5px; }
-video { width:100%; height:auto; border-radius:5px; }
-button { background:red; border:none; color:white; padding:5px; margin:2px; cursor:pointer; }
+  body { background:#0f0f0f; color:#ddd; font-family:Arial, sans-serif; margin:10px; }
+  #nomeCanal { display:flex; align-items:center; gap:10px; }
+  #nomeCanal img { width:50px; height:50px; border-radius:50%; }
+  button { background:#e33; border:none; color:white; padding:5px 10px; margin:10px 0; cursor:pointer; border-radius:3px; }
+  .videos { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  .videos video { width:100%; border:1px solid #333; border-radius:4px; }
+  .video { background:#181818; padding:5px; border:1px solid #333; border-radius:5px; cursor:pointer; }
 </style>
 </head>
 <body>
-<h1 id="nome"></h1>
-<img id="foto" width="50">
+
+<div id="nomeCanal"><img id="foto" src=""><h1 id="nome"></h1></div>
 <button id="inscreverBtn">Inscrever</button>
 <div class="videos" id="videos"></div>
 
 <script>
-let indexWindow = window.opener || window;
-let videos = indexWindow.videos || [];
-let users = indexWindow.users || [];
-let usuario = indexWindow.usuario;
-let canal = sessionStorage.getItem("canalAtual");
+let usuario = localStorage.getItem("usuario");
+let users = JSON.parse(localStorage.getItem("users") || "[]");
+let videos = JSON.parse(localStorage.getItem("videos") || "[]");
+let canal = localStorage.getItem("canalAtual");
 
-let user = users.find(u=>u.username===canal) || {nome:canal,foto:"https://via.placeholder.com/50"};
-document.getElementById("nome").innerText = user.nome;
-document.getElementById("foto").src = user.foto;
+// Dados do canal (usuário) atual
+let info = users.find(u => u.username === canal) || {nome: canal, foto:"https://via.placeholder.com/50"};
+document.getElementById("nome").innerText = info.nome;
+document.getElementById("foto").src = info.foto;
 
-// Inscrever
-document.getElementById("inscreverBtn").onclick = ()=>{
-  videos.forEach(v=>{if(v.dono===canal && !v.inscritos.includes(usuario)) v.inscritos.push(usuario)});
-  alert("Inscrito no canal!");
+// Botão Inscrever no canal: adiciona usuario atual aos inscritos de todos os vídeos deste canal
+document.getElementById("inscreverBtn").onclick = () => {
+  if (!usuario) { alert("Faça login para se inscrever."); return; }
+  videos.forEach(v => {
+    if (v.dono === canal && !v.inscritos.includes(usuario)) {
+      v.inscritos.push(usuario);
+    }
+  });
+  localStorage.setItem("videos", JSON.stringify(videos));
+  alert("Inscrito no canal " + info.nome + "!");
 };
 
-// Mostra vídeos do canal
-let div = document.getElementById("videos");
-videos.filter(v=>v.dono===canal).forEach((v,i)=>{
-  div.innerHTML += `<div class="video" onclick="abrirVideo(${videos.indexOf(v)})">
-    <video src="${v.url}" muted></video>
-    <p>${v.titulo}</p>
-  </div>`;
+// Lista de vídeos do canal
+let list = document.getElementById("videos");
+videos.filter(v => v.dono === canal).forEach(v => {
+  let idx = videos.indexOf(v);
+  list.innerHTML += `
+    <div class="video" onclick="abrirVideo(${idx})">
+      <video src="${v.url}" muted></video>
+      <p>${v.titulo}</p>
+    </div>`;
 });
 
-window.abrirVideo = (i)=>{
+window.abrirVideo = (i) => {
   videos[i].views++;
-  sessionStorage.setItem("videoAtual",i);
-  location.href="video.html";
+  localStorage.setItem("videos", JSON.stringify(videos));
+  localStorage.setItem("videoAtual", i);
+  window.location.href = "video.html";
 };
 </script>
 </body>
