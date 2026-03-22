@@ -5,12 +5,14 @@
 <title>Datuber</title>
 <style>
 body { margin:0; font-family:Arial; background:#0f0f0f; color:white; }
-header { display:flex; justify-content:space-between; padding:10px; background:#202020; }
-input { padding:5px; }
+header { display:flex; justify-content:space-between; padding:10px; background:#202020; align-items:center; }
+input { padding:5px; width:200px; }
 #videos { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; padding:10px; }
-.video { cursor:pointer; border:1px solid #333; padding:5px; border-radius:5px; }
-.login-box { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#202020; padding:20px; display:none; flex-direction:column; }
+.video { cursor:pointer; border:1px solid #333; padding:5px; border-radius:5px; display:flex; flex-direction:column; align-items:center; }
+.video video { width:100%; height:auto; }
 button { background:red; border:none; color:white; padding:5px; margin:2px; cursor:pointer; }
+.login-box, .profile-box { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#202020; padding:20px; display:none; flex-direction:column; }
+.profile-box img { width:50px; height:50px; border-radius:50%; margin-bottom:10px; }
 </style>
 </head>
 <body>
@@ -21,6 +23,7 @@ button { background:red; border:none; color:white; padding:5px; margin:2px; curs
   <div>
     <button onclick="abrirLogin()">Login</button>
     <button onclick="uploadVideo()">Postar</button>
+    <button onclick="abrirPerfil()">Perfil</button>
   </div>
 </header>
 
@@ -35,10 +38,18 @@ button { background:red; border:none; color:white; padding:5px; margin:2px; curs
   <button onclick="fecharLogin()">Fechar</button>
 </div>
 
+<!-- PERFIL -->
+<div class="profile-box" id="profileBox">
+  <img id="profileFoto" src="">
+  <input id="profileNome" placeholder="Seu nome">
+  <button onclick="salvarPerfil()">Salvar</button>
+  <button onclick="fecharPerfil()">Fechar</button>
+</div>
+
 <script>
-// ======= LOGIN SIMPLES LOCAL =======
 let usuario = localStorage.getItem("user") || null;
 
+// ======= LOGIN =======
 function abrirLogin(){ document.getElementById("loginBox").style.display="flex"; }
 function fecharLogin(){ document.getElementById("loginBox").style.display="none"; }
 
@@ -46,11 +57,9 @@ function criarConta(){
   let user = document.getElementById("user").value.trim();
   let pass = document.getElementById("pass").value.trim();
   if(!user || !pass){ alert("Preencha tudo!"); return; }
-
   let users = JSON.parse(localStorage.getItem("users")) || [];
   if(users.find(u=>u.username===user)){ alert("Usuário já existe!"); return; }
-
-  users.push({username:user, password:pass});
+  users.push({username:user,password:pass,nome:user,foto:"https://via.placeholder.com/50"});
   localStorage.setItem("users", JSON.stringify(users));
   alert("Conta criada!");
 }
@@ -60,34 +69,47 @@ function fazerLogin(){
   let pass = document.getElementById("pass").value.trim();
   let users = JSON.parse(localStorage.getItem("users")) || [];
   let u = users.find(u=>u.username===user && u.password===pass);
-  if(u){ usuario=user; localStorage.setItem("user",usuario); fecharLogin(); alert("Logado!"); carregarVideos(); }
+  if(u){ usuario=user; localStorage.setItem("user",usuario); fecharLogin(); carregarVideos(); }
   else alert("Usuário ou senha incorretos!");
 }
 
-// ======= UPLOAD DE VÍDEO DO PC =======
-function uploadVideo(){
-  if(!usuario){ alert("Faça login para postar!"); return; }
+// ======= PERFIL =======
+function abrirPerfil(){
+  if(!usuario){ alert("Faça login"); return; }
+  document.getElementById("profileBox").style.display="flex";
+  let users = JSON.parse(localStorage.getItem("users")) || [];
+  let u = users.find(u=>u.username===usuario);
+  document.getElementById("profileNome").value = u.nome;
+  document.getElementById("profileFoto").src = u.foto;
+}
+function fecharPerfil(){ document.getElementById("profileBox").style.display="none"; }
+function salvarPerfil(){
+  let users = JSON.parse(localStorage.getItem("users")) || [];
+  let u = users.find(u=>u.username===usuario);
+  u.nome = document.getElementById("profileNome").value;
+  localStorage.setItem("users",JSON.stringify(users));
+  fecharPerfil();
+  carregarVideos();
+}
 
+// ======= UPLOAD DE VÍDEO (até 20 min) =======
+function uploadVideo(){
+  if(!usuario){ alert("Faça login!"); return; }
   let input = document.createElement("input");
   input.type="file"; input.accept="video/*"; input.click();
-
   input.onchange = ()=>{
     let file = input.files[0];
-    if(!file){ alert("Nenhum vídeo selecionado!"); return; }
-
-    let titulo = prompt("Título do vídeo:");
-    if(!titulo) titulo="Sem título";
-
+    if(!file){ alert("Nenhum vídeo selecionado"); return; }
+    if(file.size>1024*1024*2000){ alert("Máximo 20min"); return; } // Aproximado 20min
+    let titulo = prompt("Título do vídeo:"); if(!titulo) titulo="Sem título";
     let reader = new FileReader();
-    reader.onload = ()=>{
+    reader.onload=()=>{
       let url = reader.result;
-
       let videos = JSON.parse(localStorage.getItem("videos")) || [];
-      videos.push({titulo:titulo, url:url, dono:usuario});
-      localStorage.setItem("videos", JSON.stringify(videos));
-
+      videos.push({titulo:titulo,url:url,dono:usuario,likes:0,inscritos:[],comentarios:[]});
+      localStorage.setItem("videos",JSON.stringify(videos));
       carregarVideos();
-      alert("Vídeo postado com sucesso!");
+      alert("Vídeo postado!");
     }
     reader.readAsDataURL(file);
   }
@@ -97,46 +119,67 @@ function uploadVideo(){
 function carregarVideos(){
   const lista = document.getElementById("videos");
   lista.innerHTML="";
-
   let videos = JSON.parse(localStorage.getItem("videos")) || [];
-
+  let users = JSON.parse(localStorage.getItem("users")) || [];
   videos.forEach((v,i)=>{
+    let user = users.find(u=>u.username===v.dono);
     lista.innerHTML += `
-      <div class="video" onclick="abrirVideo(${i})">
+      <div class="video">
         <video src="${v.url}" width="300" controls></video>
         <p><b>${v.titulo}</b></p>
-        <p>${v.dono}</p>
+        <p onclick="abrirCanal('${v.dono}')" style="cursor:pointer;color:#0af">${user.nome}</p>
+        <p>Likes: ${v.likes} | Inscritos: ${v.inscritos.length}</p>
+        <button onclick="likeVideo(${i})">👍 Like</button>
+        <button onclick="inscrever(${i})">Inscrever</button>
+        <button onclick="abrirVideo(${i})">Assistir</button>
       </div>
     `;
   });
 }
 
+// ======= FUNCOES =======
+function likeVideo(i){
+  let videos = JSON.parse(localStorage.getItem("videos"));
+  videos[i].likes++;
+  localStorage.setItem("videos",JSON.stringify(videos));
+  carregarVideos();
+}
+function inscrever(i){
+  let videos = JSON.parse(localStorage.getItem("videos"));
+  if(!videos[i].inscritos.includes(usuario)){
+    videos[i].inscritos.push(usuario);
+    localStorage.setItem("videos",JSON.stringify(videos));
+    carregarVideos();
+  }else{ alert("Você já está inscrito!"); }
+}
+function abrirCanal(user){ localStorage.setItem("canalAtual",user); window.location.href="canal.html"; }
+function abrirVideo(i){ localStorage.setItem("videoAtual",i); window.location.href="video.html"; }
+
 // ======= PESQUISA =======
 document.getElementById("pesquisa").addEventListener("input",(e)=>{
-  const termo = e.target.value.toLowerCase();
-  const lista = document.getElementById("videos");
+  let termo = e.target.value.toLowerCase();
+  let lista = document.getElementById("videos");
   lista.innerHTML="";
   let videos = JSON.parse(localStorage.getItem("videos")) || [];
+  let users = JSON.parse(localStorage.getItem("users")) || [];
   videos.forEach((v,i)=>{
+    let user = users.find(u=>u.username===v.dono);
     if(v.titulo.toLowerCase().includes(termo)){
       lista.innerHTML += `
-        <div class="video" onclick="abrirVideo(${i})">
+        <div class="video">
           <video src="${v.url}" width="300" controls></video>
           <p><b>${v.titulo}</b></p>
-          <p>${v.dono}</p>
+          <p onclick="abrirCanal('${v.dono}')" style="cursor:pointer;color:#0af">${user.nome}</p>
+          <p>Likes: ${v.likes} | Inscritos: ${v.inscritos.length}</p>
+          <button onclick="likeVideo(${i})">👍 Like</button>
+          <button onclick="inscrever(${i})">Inscrever</button>
+          <button onclick="abrirVideo(${i})">Assistir</button>
         </div>
       `;
     }
   });
 });
 
-// ======= ABRIR VIDEO NA PAGINA video.html =======
-function abrirVideo(id){
-  localStorage.setItem("videoAtual", id);
-  window.location.href="video.html";
-}
-
-// ======= INICIAR =======
 window.addEventListener("load", carregarVideos);
 </script>
 
