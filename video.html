@@ -7,34 +7,11 @@
 <style>
 body { background:#0f0f0f; color:white; font-family:Arial; }
 
-.container {
-  display: flex;
-  gap: 20px;
-}
+.container { display:flex; gap:20px; }
+.video { flex:2; }
+.side { flex:1; }
 
-.video {
-  flex: 2;
-}
-
-.recomendados {
-  flex: 1;
-}
-
-iframe {
-  width: 100%;
-  height: 400px;
-}
-
-button {
-  background:red;
-  border:none;
-  color:white;
-  padding:5px;
-}
-
-.comentario {
-  margin-top:10px;
-}
+iframe { width:100%; height:400px; }
 </style>
 </head>
 
@@ -43,14 +20,12 @@ button {
 <div class="container">
 
 <div class="video">
-
 <iframe id="player"></iframe>
 
 <h2 id="titulo"></h2>
 <p onclick="abrirCanal()" id="canal"></p>
 
-<button onclick="like()">👍 Like</button>
-<button onclick="inscrever()">🔔 Inscrever</button>
+<button onclick="inscrever()">Inscrever</button>
 
 <h3>Comentários</h3>
 <button onclick="comentar()">Comentar</button>
@@ -58,7 +33,7 @@ button {
 
 </div>
 
-<div class="recomendados" id="recomendados"></div>
+<div class="side" id="recomendados"></div>
 
 </div>
 
@@ -67,95 +42,64 @@ button {
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey: "COLE_AQUI",
-  projectId: "COLE_AQUI"
-};
-
-const app = initializeApp(firebaseConfig);
+const app = initializeApp({apiKey:"COLE_AQUI", projectId:"COLE_AQUI"});
 const db = getFirestore(app);
 
-const params = new URLSearchParams(window.location.search);
-const id = params.get("id");
-
 let usuario = localStorage.getItem("user");
-let donoVideo = "";
+let params = new URLSearchParams(location.search);
+let id = params.get("id");
+let dono="";
 
-// CARREGAR
 async function carregar(){
-  let query = await getDocs(collection(db, "videos"));
+  let q = await getDocs(collection(db,"videos"));
 
-  query.forEach(doc => {
-    if(doc.id === id){
-      let v = doc.data();
+  q.forEach(doc=>{
+    let v = doc.data();
 
-      document.getElementById("player").src = v.url;
-      document.getElementById("titulo").innerText = v.titulo;
-      document.getElementById("canal").innerText = v.dono;
-
-      donoVideo = v.dono;
+    if(doc.id===id){
+      player.src = v.url;
+      titulo.innerText = v.titulo;
+      canal.innerText = v.dono;
+      dono = v.dono;
     } else {
-      let v = doc.data();
-
-      document.getElementById("recomendados").innerHTML += `
-        <div onclick="abrirVideo('${doc.id}')">
-          <img src="${v.thumb}" width="100%">
-          <p>${v.titulo}</p>
-        </div>
-      `;
+      recomendados.innerHTML+=`
+      <div onclick="abrirVideo('${doc.id}')">
+        <img src="${v.thumb}" width="100%">
+        <p>${v.titulo}</p>
+      </div>`;
     }
   });
 }
 
-// COMENTAR
-window.comentar = async () => {
+window.comentar = async ()=>{
   let texto = prompt("Comentário:");
-
-  await addDoc(collection(db, "comentarios"), {
-    videoId: id,
-    usuario: usuario,
-    texto
-  });
-
+  await addDoc(collection(db,"comentarios"),{videoId:id, usuario, texto});
   carregarComentarios();
 }
 
-// MOSTRAR COMENTÁRIOS
 async function carregarComentarios(){
-  let lista = document.getElementById("comentarios");
-  lista.innerHTML = "";
+  comentarios.innerHTML="";
+  let q = await getDocs(collection(db,"comentarios"));
 
-  let query = await getDocs(collection(db, "comentarios"));
-
-  query.forEach(doc => {
+  q.forEach(doc=>{
     let c = doc.data();
-
-    if(c.videoId === id){
-      lista.innerHTML += `<p><b>${c.usuario}</b>: ${c.texto}</p>`;
+    if(c.videoId===id){
+      comentarios.innerHTML+=`<p><b>${c.usuario}</b>: ${c.texto}</p>`;
     }
   });
 }
 
-// LIKE
-window.like = () => alert("Like 👍");
-
-// INSCRVER
-window.inscrever = async () => {
-  await addDoc(collection(db, "inscricoes"), {
-    canal: donoVideo,
-    usuario: usuario
-  });
-
+window.inscrever = async ()=>{
+  await addDoc(collection(db,"inscricoes"),{canal:dono, usuario});
   alert("Inscrito!");
 }
 
-// ABRIR CANAL
-window.abrirCanal = () => {
-  window.location.href = "canal.html?user=" + donoVideo;
+window.abrirCanal = ()=>{
+  location.href="canal.html?user="+dono;
 }
 
-window.abrirVideo = (id) => {
-  window.location.href = "video.html?id=" + id;
+window.abrirVideo = (id)=>{
+  location.href="video.html?id="+id;
 }
 
 carregar();
