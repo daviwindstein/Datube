@@ -1,26 +1,226 @@
-
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
 <title>Datuber</title>
-<link rel="stylesheet" href="style.css">
+
+<style>
+body {
+  background: #0f0f0f;
+  color: white;
+  font-family: Arial;
+}
+
+header {
+  display: flex;
+  gap: 10px;
+  padding: 10px;
+  background: #202020;
+}
+
+button {
+  background: red;
+  color: white;
+  border: none;
+  padding: 5px;
+  cursor: pointer;
+}
+
+.video {
+  margin: 10px;
+}
+</style>
 </head>
 
 <body>
 
 <header>
-  <h1>📺 Datuber</h1>
-  <input placeholder="Pesquisar">
+  <button onclick="registrar()">Criar Conta</button>
+  <button onclick="login()">Login</button>
+  <button onclick="uploadVideo()">📤 Enviar Vídeo</button>
+  <button onclick="verCanal()">Meu Canal</button>
+  <button onclick="pesquisar()">Pesquisar</button>
 </header>
+
+<h2>📺 Datuber</h2>
 
 <div id="videos"></div>
 
-<script src="script.js"></script>
+<script type="module">
+
+// 🔥 IMPORT FIREBASE
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-storage.js";
+
+// ⚠️ COLOQUE SEUS DADOS DO FIREBASE AQUI
+const firebaseConfig = {
+  apiKey: "COLE_AQUI",
+  authDomain: "COLE_AQUI",
+  projectId: "COLE_AQUI",
+  storageBucket: "COLE_AQUI",
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+// 👤 USUÁRIO
+let usuarioLogado = null;
+
+// 🔐 CRIAR CONTA
+window.registrar = async () => {
+  let username = prompt("Crie um usuário:");
+  let senha = prompt("Crie uma senha:");
+
+  let users = await getDocs(collection(db, "users"));
+  let existe = false;
+
+  users.forEach(u => {
+    if(u.data().username === username){
+      existe = true;
+    }
+  });
+
+  if(existe){
+    alert("Nome já existe!");
+    return;
+  }
+
+  await addDoc(collection(db, "users"), {
+    username,
+    password: senha
+  });
+
+  alert("Conta criada!");
+}
+
+// 🔓 LOGIN
+window.login = async () => {
+  let username = prompt("Usuário:");
+  let senha = prompt("Senha:");
+
+  let users = await getDocs(collection(db, "users"));
+
+  users.forEach(u => {
+    let data = u.data();
+    if(data.username === username && data.password === senha){
+      usuarioLogado = username;
+    }
+  });
+
+  if(usuarioLogado){
+    alert("Logado como " + usuarioLogado);
+  } else {
+    alert("Erro no login");
+  }
+}
+
+// 📤 ENVIAR VÍDEO
+window.uploadVideo = async () => {
+  if(!usuarioLogado){
+    alert("Faça login!");
+    return;
+  }
+
+  let file = document.createElement("input");
+  file.type = "file";
+  file.accept = "video/*";
+  file.click();
+
+  file.onchange = async () => {
+    let video = file.files[0];
+    let titulo = prompt("Título:");
+
+    let refVideo = ref(storage, "videos/" + video.name);
+    await uploadBytes(refVideo, video);
+    let url = await getDownloadURL(refVideo);
+
+    await addDoc(collection(db, "videos"), {
+      titulo,
+      url,
+      dono: usuarioLogado
+    });
+
+    alert("Vídeo enviado!");
+    carregarVideos();
+  }
+}
+
+// 📺 CARREGAR VÍDEOS
+async function carregarVideos(){
+  let lista = document.getElementById("videos");
+  lista.innerHTML = "";
+
+  let query = await getDocs(collection(db, "videos"));
+
+  query.forEach(doc => {
+    let v = doc.data();
+
+    lista.innerHTML += `
+      <div class="video">
+        <video src="${v.url}" width="300" controls></video>
+        <p>${v.titulo}</p>
+        <p>👤 ${v.dono}</p>
+      </div>
+    `;
+  });
+}
+
+// 👤 MEU CANAL
+window.verCanal = async () => {
+  if(!usuarioLogado){
+    alert("Faça login!");
+    return;
+  }
+
+  let lista = document.getElementById("videos");
+  lista.innerHTML = "";
+
+  let query = await getDocs(collection(db, "videos"));
+
+  query.forEach(doc => {
+    let v = doc.data();
+
+    if(v.dono === usuarioLogado){
+      lista.innerHTML += `
+        <div class="video">
+          <video src="${v.url}" width="300" controls></video>
+          <p>${v.titulo}</p>
+        </div>
+      `;
+    }
+  });
+}
+
+// 🔍 PESQUISA
+window.pesquisar = async () => {
+  let termo = prompt("Pesquisar:");
+
+  let lista = document.getElementById("videos");
+  lista.innerHTML = "";
+
+  let query = await getDocs(collection(db, "videos"));
+
+  query.forEach(doc => {
+    let v = doc.data();
+
+    if(v.titulo.includes(termo)){
+      lista.innerHTML += `
+        <div class="video">
+          <video src="${v.url}" width="300" controls></video>
+          <p>${v.titulo}</p>
+        </div>
+      `;
+    }
+  });
+}
+
+// 🚀 INICIAR
+carregarVideos();
+
+</script>
+
 </body>
 </html>
-<button onclick="registrar()">Criar Conta</button>
-<button onclick="login()">Login</button>
-<button onclick="uploadVideo()">Enviar Vídeo</button>
-<button onclick="verCanal()">Meu Canal</button>
-<button onclick="pesquisar()">Pesquisar</button>
+
