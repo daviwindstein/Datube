@@ -4,60 +4,51 @@
 <meta charset="UTF-8">
 <title>Canal</title>
 <style>
-body { background:#0f0f0f; color:white; font-family:Arial; margin:0; padding:10px; }
-h1 { margin:0; }
-.videos{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:10px;}
-.video { border:1px solid #333; padding:5px; border-radius:5px; display:flex; flex-direction:column; align-items:center; }
-.video video { width:100%; height:auto; }
+body { background:#0f0f0f; color:white; font-family:Arial; }
+.videos{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;padding:10px;}
+.video { cursor:pointer; border:1px solid #333; padding:5px; border-radius:5px; }
+video { width:100%; height:auto; border-radius:5px; }
 button { background:red; border:none; color:white; padding:5px; margin:2px; cursor:pointer; }
 </style>
 </head>
 <body>
-
-<h1 id="nomeCanal"></h1>
-<img id="fotoCanal" src="" width="50" height="50" style="border-radius:50%;">
+<h1 id="nome"></h1>
+<img id="foto" width="50">
 <button id="inscreverBtn">Inscrever</button>
 <div class="videos" id="videos"></div>
 
 <script>
-let canal = localStorage.getItem("canalAtual");
+let usuario = localStorage.getItem("user");
 let videos = JSON.parse(localStorage.getItem("videos")) || [];
 let users = JSON.parse(localStorage.getItem("users")) || [];
-let userObj = users.find(u=>u.username===canal);
-document.getElementById("nomeCanal").innerText = userObj.nome;
-document.getElementById("fotoCanal").src = userObj.foto;
+let canal = localStorage.getItem("canalAtual");
+
+let user = users.find(u=>u.username===canal) || {nome:canal,foto:"https://via.placeholder.com/50"};
+document.getElementById("nome").innerText = user.nome;
+document.getElementById("foto").src = user.foto;
 
 // Inscrever
-let inscreverBtn = document.getElementById("inscreverBtn");
-inscreverBtn.onclick = ()=>{
-  if(!userObj.videos) userObj.videos = [];
-  videos.forEach(v=>{
-    if(v.dono===canal && !v.inscritos.includes(usuario)) v.inscritos.push(usuario);
-  });
+document.getElementById("inscreverBtn").onclick = ()=>{
+  videos.forEach(v=>{if(v.dono===canal && !v.inscritos.includes(usuario)) v.inscritos.push(usuario)});
   localStorage.setItem("videos",JSON.stringify(videos));
   alert("Inscrito no canal!");
 };
 
-// Mostrar vídeos do canal
-let lista = document.getElementById("videos");
-videos.forEach((v,i)=>{
-  if(v.dono===canal){
-    lista.innerHTML += `
-      <div class="video">
-        <video src="${v.url}" controls></video>
-        <p><b>${v.titulo}</b></p>
-        <p>Likes: ${v.likes}</p>
-        <button onclick="abrirVideo(${i})">Assistir</button>
-      </div>
-    `;
-  }
+// Mostra vídeos do canal
+let div = document.getElementById("videos");
+videos.filter(v=>v.dono===canal).forEach((v,i)=>{
+  div.innerHTML += `<div class="video" onclick="abrirVideo(${videos.indexOf(v)})">
+    <video src="${v.url}" muted></video>
+    <p>${v.titulo}</p>
+  </div>`;
 });
 
-function abrirVideo(i){
+window.abrirVideo = (i)=>{
+  videos[i].views++;
+  localStorage.setItem("videos",JSON.stringify(videos));
   localStorage.setItem("videoAtual",i);
-  window.location.href="video.html";
-}
+  location.href="video.html";
+};
 </script>
-
 </body>
 </html>
