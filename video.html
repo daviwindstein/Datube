@@ -1,116 +1,128 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Assistir - Datuber</title>
+<title>Assistir</title>
 
 <style>
-body {
-  background:#0f0f0f;
-  color:white;
-  font-family:Arial;
+body { background:#0f0f0f; color:white; font-family:Arial; }
+
+.container {
+  display: flex;
+  gap: 20px;
 }
 
-.video-container {
-  max-width:900px;
-  margin:auto;
+.video {
+  flex: 2;
 }
 
-video {
-  width:100%;
+.recomendados {
+  flex: 1;
+}
+
+iframe {
+  width: 100%;
+  height: 400px;
 }
 
 button {
   background:red;
-  color:white;
   border:none;
-  padding:8px;
-  margin:5px;
-  cursor:pointer;
+  color:white;
+  padding:5px;
 }
 
-.comentarios {
-  margin-top:20px;
+.comentario {
+  margin-top:10px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="video-container">
+<div class="container">
 
-  <iframe id="player" width="100%" height="500"></iframe>>
+<div class="video">
 
-  <h2 id="titulo"></h2>
-  <p id="dono"></p>
+<iframe id="player"></iframe>
 
-  <button onclick="like()">👍 Like</button>
-  <button onclick="inscrever()">🔔 Inscrever-se</button>
+<h2 id="titulo"></h2>
+<p onclick="abrirCanal()" id="canal"></p>
 
-  <div class="comentarios">
-    <h3>Comentários</h3>
-    <button onclick="comentar()">Comentar</button>
-    <div id="listaComentarios"></div>
-  </div>
+<button onclick="like()">👍 Like</button>
+<button onclick="inscrever()">🔔 Inscrever</button>
+
+<h3>Comentários</h3>
+<button onclick="comentar()">Comentar</button>
+<div id="comentarios"></div>
+
+</div>
+
+<div class="recomendados" id="recomendados"></div>
 
 </div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "COLE_AQUI",
-  authDomain: "COLE_AQUI",
   projectId: "COLE_AQUI"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🔥 PEGAR ID DO VÍDEO
 const params = new URLSearchParams(window.location.search);
-const videoId = params.get("id");
+const id = params.get("id");
 
 let usuario = localStorage.getItem("user");
+let donoVideo = "";
 
-// 📺 CARREGAR VÍDEO
-async function carregarVideo(){
+// CARREGAR
+async function carregar(){
   let query = await getDocs(collection(db, "videos"));
 
   query.forEach(doc => {
-    if(doc.id === videoId){
+    if(doc.id === id){
       let v = doc.data();
 
       document.getElementById("player").src = v.url;
       document.getElementById("titulo").innerText = v.titulo;
-      document.getElementById("dono").innerText = "Canal: " + v.dono;
+      document.getElementById("canal").innerText = v.dono;
+
+      donoVideo = v.dono;
+    } else {
+      let v = doc.data();
+
+      document.getElementById("recomendados").innerHTML += `
+        <div onclick="abrirVideo('${doc.id}')">
+          <img src="${v.thumb}" width="100%">
+          <p>${v.titulo}</p>
+        </div>
+      `;
     }
   });
 }
 
-// 💬 COMENTAR
+// COMENTAR
 window.comentar = async () => {
-  if(!usuario){
-    alert("Faça login!");
-    return;
-  }
-
-  let texto = prompt("Seu comentário:");
+  let texto = prompt("Comentário:");
 
   await addDoc(collection(db, "comentarios"), {
-    videoId: videoId,
+    videoId: id,
     usuario: usuario,
-    texto: texto
+    texto
   });
 
   carregarComentarios();
 }
 
-// 📥 CARREGAR COMENTÁRIOS
+// MOSTRAR COMENTÁRIOS
 async function carregarComentarios(){
-  let lista = document.getElementById("listaComentarios");
+  let lista = document.getElementById("comentarios");
   lista.innerHTML = "";
 
   let query = await getDocs(collection(db, "comentarios"));
@@ -118,58 +130,38 @@ async function carregarComentarios(){
   query.forEach(doc => {
     let c = doc.data();
 
-    if(c.videoId === videoId){
+    if(c.videoId === id){
       lista.innerHTML += `<p><b>${c.usuario}</b>: ${c.texto}</p>`;
     }
   });
 }
 
-// ❤️ LIKE (simples)
-window.like = () => {
-  alert("Você curtiu!");
-}
+// LIKE
+window.like = () => alert("Like 👍");
 
-// 🔔 INSCREVER
-window.inscrever = () => {
-  alert("Você se inscreveu!");
-}
-
-carregarVideo();
-carregarComentarios();
-
-</script>
-
-</body>
-</html>
-<button onclick="inscrever()">🔔 Inscrever-se</button>
-<p id="inscritos"></p>
-async function inscrever(){
-  if(!usuario){
-    alert("Faça login!");
-    return;
-  }
-
+// INSCRVER
+window.inscrever = async () => {
   await addDoc(collection(db, "inscricoes"), {
     canal: donoVideo,
     usuario: usuario
   });
 
   alert("Inscrito!");
-  contarInscritos();
 }
 
-// CONTAR INSCRITOS
-async function contarInscritos(){
-  let total = 0;
-
-  let query = await getDocs(collection(db, "inscricoes"));
-
-  query.forEach(doc => {
-    if(doc.data().canal === donoVideo){
-      total++;
-    }
-  });
-
-  document.getElementById("inscritos").innerText =
-    "Inscritos: " + total;
+// ABRIR CANAL
+window.abrirCanal = () => {
+  window.location.href = "canal.html?user=" + donoVideo;
 }
+
+window.abrirVideo = (id) => {
+  window.location.href = "video.html?id=" + id;
+}
+
+carregar();
+carregarComentarios();
+
+</script>
+
+</body>
+</html>
