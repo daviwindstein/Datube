@@ -132,37 +132,32 @@ window.login = async () => {
   }
 }
 
-// 📤 ENVIAR VÍDEO
 window.uploadVideo = async () => {
   if(!usuarioLogado){
     alert("Faça login!");
     return;
   }
 
-  let file = document.createElement("input");
-  file.type = "file";
-  file.accept = "video/*";
-  file.click();
+  let url = prompt("Cole o link do vídeo do YouTube:");
+  let titulo = prompt("Título do vídeo:");
 
-  file.onchange = async () => {
-    let video = file.files[0];
-    let titulo = prompt("Título:");
-
-    let refVideo = ref(storage, "videos/" + video.name);
-    await uploadBytes(refVideo, video);
-    let url = await getDownloadURL(refVideo);
-
-    await addDoc(collection(db, "videos"), {
-      titulo,
-      url,
-      dono: usuarioLogado
-    });
-
-    alert("Vídeo enviado!");
-    carregarVideos();
+  if(!url || !titulo){
+    alert("Preencha tudo!");
+    return;
   }
-}
 
+  // converter link para embed
+  let embed = url.replace("watch?v=", "embed/");
+
+  await addDoc(collection(db, "videos"), {
+    titulo: titulo,
+    url: embed,
+    dono: usuarioLogado
+  });
+
+  alert("Vídeo postado!");
+  carregarVideos();
+}
 // 📺 CARREGAR VÍDEOS
 async function carregarVideos(){
   let lista = document.getElementById("videos");
@@ -177,7 +172,7 @@ async function carregarVideos(){
       <div class="video">
        lista.innerHTML += `
   <div class="video" onclick="abrirVideo('${doc.id}')">
-    <video src="${v.url}" width="300"></video>
+   <iframe src="${v.url}" width="300"></iframe>
     <p>${v.titulo}</p>
   </div>
 `;
