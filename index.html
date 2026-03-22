@@ -85,6 +85,7 @@ button {
   border: none;
   padding: 6px;
   cursor: pointer;
+  <button onclick="fecharLogin()">❌</button>
 }
 </style>
 </head>
@@ -101,14 +102,63 @@ button {
     <button onclick="uploadVideo()">📤 Postar</button>
   </div>
 </header>
+  window.criarConta = async () => {
+  let user = document.getElementById("user").value.trim();
+  let pass = document.getElementById("pass").value.trim();
 
-<!-- LOGIN -->
-<div class="login-box" id="loginBox">
-  <input id="user" placeholder="Usuário">
-  <input id="pass" type="password" placeholder="Senha">
-  <button onclick="fazerLogin()">Entrar</button>
-  <button onclick="criarConta()">Criar Conta</button>
-</div>
+  if(!user || !pass){
+    alert("Preencha tudo!");
+    return;
+  }
+
+  let query = await getDocs(collection(db, "users"));
+
+  for (let doc of query.docs) {
+    if(doc.data().username === user){
+      alert("Usuário já existe!");
+      return;
+    }
+  }
+
+  await addDoc(collection(db, "users"), {
+    username: user,
+    password: pass
+  });
+
+  alert("Conta criada!");
+}
+
+  window.fazerLogin = async () => {
+  let user = document.getElementById("user").value.trim();
+  let pass = document.getElementById("pass").value.trim();
+
+  if(!user || !pass){
+    alert("Preencha tudo!");
+    return;
+  }
+
+  let query = await getDocs(collection(db, "users"));
+
+  let encontrou = false;
+
+  for (let doc of query.docs) {
+    let data = doc.data();
+
+    if(data.username === user && data.password === pass){
+      encontrou = true;
+      localStorage.setItem("user", user);
+      usuario = user;
+
+      document.getElementById("loginBox").style.display = "none";
+      alert("Login feito!");
+      break;
+    }
+  }
+
+  if(!encontrou){
+    alert("Usuário ou senha errado!");
+  }
+}
 
 <!-- VÍDEOS -->
 <div id="videos"></div>
