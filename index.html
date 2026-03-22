@@ -1,18 +1,20 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
-<title>Datuber</title>
+<title>Datuber - Página Inicial</title>
 <style>
-body { margin:0; font-family:Arial; background:#0f0f0f; color:white; }
-header { display:flex; justify-content:space-between; padding:10px; background:#202020; }
-input { padding:5px; width:200px; }
-#videos { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; padding:10px; }
-.video { cursor:pointer; border:1px solid #333; padding:5px; border-radius:5px; }
-.video video { width:100%; height:auto; border-radius:5px; }
-.highlight { border:2px solid gold; }
-.login-box { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#202020; padding:20px; display:none; flex-direction:column; }
-button { background:red; border:none; color:white; padding:5px; margin:2px; cursor:pointer; }
+  body { margin:0; font-family:Arial, sans-serif; background:#0f0f0f; color:#ddd; }
+  header { display:flex; align-items:center; justify-content:space-between; padding:10px; background:#202020; }
+  input { padding:5px; width:200px; border-radius:4px; border:1px solid #444; }
+  #videos { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; padding:10px; }
+  .video { background:#181818; border:1px solid #333; padding:5px; border-radius:5px; cursor:pointer; }
+  .video video { width:100%; display:block; }
+  .highlight { border:2px solid gold; }
+  .login-box { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); 
+               background:#202020; padding:20px; display:none; flex-direction:column; }
+  .login-box input { margin:5px 0; }
+  button { background:#e33; border:none; color:white; padding:5px 10px; margin:2px; cursor:pointer; border-radius:3px; }
 </style>
 </head>
 <body>
@@ -25,12 +27,6 @@ button { background:red; border:none; color:white; padding:5px; margin:2px; curs
     <button onclick="uploadVideo()">Postar</button>
   </div>
 </header>
-
-<h3>🎬 Vídeo mais recente</h3>
-<div id="recent" style="display:grid; grid-template-columns:1fr; gap:10px; padding:10px;"></div>
-
-<h3>🔥 Vídeo mais visto</h3>
-<div id="popular" style="display:grid; grid-template-columns:1fr; gap:10px; padding:10px;"></div>
 
 <h3>📜 Todos os vídeos</h3>
 <div id="videos"></div>
@@ -47,147 +43,112 @@ button { background:red; border:none; color:white; padding:5px; margin:2px; curs
 </div>
 
 <script>
-let usuario = localStorage.getItem("user");
-let users = JSON.parse(localStorage.getItem("users")) || [];
-let videos = JSON.parse(localStorage.getItem("videos")) || [];
+// Inicialização: carrega arrays de usuários e vídeos do localStorage (ou cria se não existir)
+let usuario = localStorage.getItem("usuario");
+let users = JSON.parse(localStorage.getItem("users") || "[]");
+let videos = JSON.parse(localStorage.getItem("videos") || "[]");
 
-// LOGIN UI
+// Abre/fecha janela de login
 window.abrirLogin = () => document.getElementById("loginBox").style.display = "flex";
 window.fecharLogin = () => document.getElementById("loginBox").style.display = "none";
 
-// CRIAR CONTA
-window.criarConta = () => {
-  let user = document.getElementById("user").value.trim();
-  let pass = document.getElementById("pass").value.trim();
-  let nome = document.getElementById("nome").value.trim() || user;
+// Criar nova conta (cadastro simples)
+function criarConta() {
+  let u = document.getElementById("user").value.trim();
+  let p = document.getElementById("pass").value;
+  let nomeCanal = document.getElementById("nome").value.trim() || u;
   let foto = document.getElementById("foto").value.trim() || "https://via.placeholder.com/50";
+  if (!u || !p) { alert("Preencha usuário e senha!"); return; }
+  if (users.find(x => x.username === u)) { alert("Usuário já existe!"); return; }
+  users.push({username:u, password:p, nome:nomeCanal, foto:foto});
+  localStorage.setItem("users", JSON.stringify(users));
+  alert("Conta criada com sucesso!");
+  fecharLogin();
+}
 
-  if(!user || !pass) return alert("Preencha tudo!");
-  if(users.find(u=>u.username===user)) return alert("Usuário já existe!");
-
-  users.push({username:user, password:pass, nome, foto});
-  localStorage.setItem("users",JSON.stringify(users));
-  alert("Conta criada!");
-};
-
-// LOGIN
-window.fazerLogin = () => {
-  let user = document.getElementById("user").value.trim();
-  let pass = document.getElementById("pass").value.trim();
-
-  let u = users.find(u=>u.username===user && u.password===pass);
-  if(u){
-    usuario=user;
-    localStorage.setItem("user",user);
+// Autenticar (login)
+function fazerLogin() {
+  let u = document.getElementById("user").value.trim();
+  let p = document.getElementById("pass").value;
+  let found = users.find(x => x.username===u && x.password===p);
+  if (found) {
+    usuario = u;
+    localStorage.setItem("usuario", u);
     fecharLogin();
-    alert("Logado!");
-  } else alert("Erro no login!");
-};
-
-// UPLOAD VÍDEO
-window.uploadVideo = () => {
-  if(!usuario){ alert("Faça login!"); return; }
-
-  let input = document.createElement("input");
-  input.type = "file";
-  input.accept = "video/*";
-  input.click();
-
-  input.onchange = ()=>{
-    let file = input.files[0];
-    if(!file) return alert("Nenhum vídeo escolhido");
-
-    let titulo = prompt("Título do vídeo:") || file.name;
-
-    let reader = new FileReader();
-    reader.onload = ()=>{
-      let dono = users.find(u=>u.username===usuario);
-
-      let novoVideo = {
-        titulo,
-        url: reader.result,
-        dono: usuario,
-        nomeDono: dono.nome,
-        fotoDono: dono.foto,
-        likes:0,
-        inscritos:[],
-        comentarios:[],
-        views:0,
-        data: Date.now()
-      };
-
-      // adiciona no início do array
-      videos.unshift(novoVideo);
-
-      // salva no storage
-      localStorage.setItem("videos",JSON.stringify(videos));
-
-      // atualiza página
-      carregarTodosVideos();
-      alert(`Vídeo "${titulo}" postado!`);
-    };
-    reader.readAsDataURL(file);
+    alert("Logado como " + found.nome);
+    carregarVideos();  // pode atualizar UI se necessário
+  } else {
+    alert("Usuário ou senha inválidos!");
   }
-};
+}
 
-// CARREGAR TODOS OS VÍDEOS
-function carregarTodosVideos(term=""){
-  let lista = document.getElementById("videos");
-  let recent = document.getElementById("recent");
-  let popular = document.getElementById("popular");
+// Upload de vídeo: lê arquivo local e armazena
+function uploadVideo() {
+  if (!usuario) { alert("Faça login para postar."); return; }
+  let input = document.createElement("input");
+  input.type = "file"; input.accept = "video/*";
+  input.onchange = () => {
+    let file = input.files[0];
+    if (!file) return;
+    if (file.size > 200*1024*1024) { alert("Vídeo muito grande (máx ~200MB)."); return; }
+    let reader = new FileReader();
+    reader.onload = () => {
+      let donoObj = users.find(x => x.username === usuario);
+      let novo = {
+        titulo: prompt("Título do vídeo:", file.name) || file.name,
+        url: reader.result,
+        dono: usuario, nomeDono: donoObj.nome, fotoDono: donoObj.foto,
+        likes:0, inscritos:[], comentarios:[], views:0, data: Date.now()
+      };
+      videos.push(novo);
+      localStorage.setItem("videos", JSON.stringify(videos));
+      carregarVideos();  // atualiza lista sem recarregar a página
+      alert(`Vídeo "${novo.titulo}" postado!`);
+    };
+    reader.readAsDataURL(file);  // base64【15†L212-L220】
+  };
+  input.click();
+}
 
-  lista.innerHTML = "";
-  recent.innerHTML = "";
-  popular.innerHTML = "";
-
-  let filtered = videos.filter(v=>v.titulo.toLowerCase().includes(term.toLowerCase()));
-
-  if(filtered.length==0) return lista.innerHTML="<p>Nenhum vídeo encontrado.</p>";
-
-  // Mais recente
-  let latest = filtered[0];
-  recent.innerHTML = `
-    <div class="video highlight" onclick="abrirVideo(${videos.indexOf(latest)})">
-      <video src="${latest.url}" muted></video>
-      <p><b>${latest.titulo}</b> - ${latest.nomeDono}</p>
-    </div>
-  `;
-
-  // Mais visto
-  let popularV = filtered.reduce((a,b)=>a.views>b.views?a:b);
-  popular.innerHTML = `
-    <div class="video highlight" onclick="abrirVideo(${videos.indexOf(popularV)})">
-      <video src="${popularV.url}" muted></video>
-      <p><b>${popularV.titulo}</b> - ${popularV.nomeDono} - Views: ${popularV.views}</p>
-    </div>
-  `;
-
-  // Todos os vídeos
-  filtered.forEach(v=>{
-    lista.innerHTML += `
+// Carrega e exibe vídeos (com filtro opcional de pesquisa)
+function carregarVideos(termo="") {
+  let container = document.getElementById("videos");
+  container.innerHTML = "";
+  // Filtra por título
+  let list = videos.filter(v => v.titulo.toLowerCase().includes(termo.toLowerCase()));
+  if (list.length === 0) {
+    container.innerHTML = "<p>Nenhum vídeo encontrado.</p>";
+    return;
+  }
+  // Destaca vídeo mais recente (maior timestamp) e mais visto (maior views) – opcionais
+  // (Aqui optamos por simplesmente listar todos juntos; estilos .highlight podem ser aplicados)
+  list.forEach((v, i) => {
+    // Para cada vídeo cria um bloco .video clicável
+    container.innerHTML += `
       <div class="video" onclick="abrirVideo(${videos.indexOf(v)})">
         <video src="${v.url}" muted></video>
         <p><b>${v.titulo}</b></p>
         <p>${v.nomeDono}</p>
-      </div>
-    `;
+      </div>`;
   });
 }
-carregarTodosVideos();
 
-// PESQUISA
-document.getElementById("pesquisa").oninput = (e)=>{
-  let termo = e.target.value;
-  carregarTodosVideos(termo);
+// Pesquisa em tempo real
+document.getElementById("pesquisa").oninput = e => {
+  carregarVideos(e.target.value);
 };
 
-// ABRIR VÍDEO
-window.abrirVideo = (id)=>{
-  videos[id].views = (videos[id].views||0)+1;
-  localStorage.setItem("videos",JSON.stringify(videos));
-  localStorage.setItem("videoAtual",id);
+// Ao carregar a página, exibe vídeos existentes
+window.addEventListener("load", () => { carregarVideos(); });
+
+
+// Navega para reprodução do vídeo (seta videoAtual e vai para video.html)
+function abrirVideo(id) {
+  videos[id].views = (videos[id].views || 0) + 1;
+  localStorage.setItem("videos", JSON.stringify(videos));
+  localStorage.setItem("videoAtual", id);
   window.location.href = "video.html";
-};
+}
 </script>
 </body>
 </html>
