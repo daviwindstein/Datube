@@ -68,10 +68,17 @@ const storage = getStorage(app);
 // 👤 USUÁRIO
 let usuarioLogado = null;
 
+let usuarioLogado = null;
+
 // 🔐 CRIAR CONTA
 window.registrar = async () => {
   let username = prompt("Crie um usuário:");
   let senha = prompt("Crie uma senha:");
+
+  if(!username || !senha){
+    alert("Preencha tudo!");
+    return;
+  }
 
   let users = await getDocs(collection(db, "users"));
   let existe = false;
@@ -83,36 +90,45 @@ window.registrar = async () => {
   });
 
   if(existe){
-    alert("Nome já existe!");
+    alert("Esse nome já existe!");
     return;
   }
 
   await addDoc(collection(db, "users"), {
-    username,
+    username: username,
     password: senha
   });
 
-  alert("Conta criada!");
+  alert("Conta criada com sucesso!");
 }
 
-// 🔓 LOGIN
+// 🔓 LOGIN CORRIGIDO
 window.login = async () => {
   let username = prompt("Usuário:");
   let senha = prompt("Senha:");
 
+  if(!username || !senha){
+    alert("Preencha tudo!");
+    return;
+  }
+
   let users = await getDocs(collection(db, "users"));
+  let achou = false;
 
   users.forEach(u => {
     let data = u.data();
+
     if(data.username === username && data.password === senha){
       usuarioLogado = username;
+      achou = true;
     }
   });
 
-  if(usuarioLogado){
-    alert("Logado como " + usuarioLogado);
+  if(achou){
+    localStorage.setItem("user", username); // 🔥 salva login
+    alert("Logado como " + username);
   } else {
-    alert("Erro no login");
+    alert("Usuário ou senha incorretos!");
   }
 }
 
