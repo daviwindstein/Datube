@@ -153,6 +153,88 @@ function abrirVideo(id) {
   localStorage.setItem("videoAtual", id);
   window.location.href = "video.html";
 }
+  <!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Upload Vídeo 20min</title>
+</head>
+<body>
+<h2>Upload de vídeo até 20 minutos</h2>
+<input type="file" id="videoInput" accept="video/*">
+<button onclick="uploadVideo()">Postar</button>
+
+<h3>Vídeos Postados</h3>
+<div id="videos"></div>
+
+<script>
+// ABRINDO IndexedDB
+let db;
+let request = indexedDB.open("DatuberDB", 1);
+request.onupgradeneeded = (e) => {
+  db = e.target.result;
+  if(!db.objectStoreNames.contains("videos")){
+    let store = db.createObjectStore("videos", { keyPath: "id", autoIncrement: true });
+  }
+};
+request.onsuccess = (e) => {
+  db = e.target.result;
+  carregarVideos();
+};
+
+// FUNÇÃO DE UPLOAD
+function uploadVideo(){
+  const input = document.getElementById("videoInput");
+  const file = input.files[0];
+  if(!file) return alert("Escolha um vídeo!");
+
+  // Limite de 20 minutos = 1.2 GB aproximadamente (depende do codec)
+  if(file.size > 1.2e+9) return alert("Vídeo maior que 20 minutos!");
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    const transaction = db.transaction(["videos"], "readwrite");
+    const store = transaction.objectStore("videos");
+    const video = {
+      titulo: file.name,
+      blob: reader.result,
+      data: Date.now()
+    };
+    store.add(video);
+    transaction.oncomplete = () => {
+      alert("Vídeo postado!");
+      carregarVideos();
+    }
+  };
+  reader.readAsArrayBuffer(file); // melhor para arquivos grandes
+}
+
+// CARREGAR VÍDEOS
+function carregarVideos(){
+  const container = document.getElementById("videos");
+  container.innerHTML = "";
+  const transaction = db.transaction(["videos"], "readonly");
+  const store = transaction.objectStore("videos");
+  const request = store.openCursor(null, "prev"); // mais recentes primeiro
+  request.onsuccess = (e) => {
+    const cursor = e.target.result;
+    if(cursor){
+      const v = cursor.value;
+      const blob = new Blob([v.blob], {type:"video/mp4"});
+      const url = URL.createObjectURL(blob);
+      container.innerHTML += `
+        <div>
+          <video src="${url}" width="300" controls></video>
+          <p>${v.titulo}</p>
+        </div>
+      `;
+      cursor.continue();
+    }
+  }
+}
+</script>
+</body>
+</html>
 </script>
 </body>
 </html>
