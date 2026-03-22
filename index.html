@@ -234,6 +234,14 @@ window.pesquisar = async () => {
 
 // 🚀 INICIAR
 carregarVideos();
+  // 🔄 manter login mesmo recarregando
+window.onload = () => {
+  let user = localStorage.getItem("user");
+  if(user){
+    usuarioLogado = user;
+    console.log("Logado automaticamente:", user);
+  }
+}
 
 </script>
 
