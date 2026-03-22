@@ -6,10 +6,11 @@
 <style>
 body { margin:0; font-family:Arial; background:#0f0f0f; color:white; }
 header { display:flex; justify-content:space-between; padding:10px; background:#202020; }
-input { padding:5px; }
+input { padding:5px; width:200px; }
 #videos { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; padding:10px; }
 .video { cursor:pointer; border:1px solid #333; padding:5px; border-radius:5px; }
 .video video { width:100%; height:auto; border-radius:5px; }
+.highlight { border:2px solid gold; }
 .login-box { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%); background:#202020; padding:20px; display:none; flex-direction:column; }
 button { background:red; border:none; color:white; padding:5px; margin:2px; cursor:pointer; }
 </style>
@@ -18,13 +19,20 @@ button { background:red; border:none; color:white; padding:5px; margin:2px; curs
 
 <header>
   <h2>📺 Datuber</h2>
-  <input id="pesquisa" placeholder="Pesquisar...">
+  <input id="pesquisa" placeholder="Pesquisar vídeos...">
   <div>
     <button onclick="abrirLogin()">Login</button>
     <button onclick="uploadVideo()">Postar</button>
   </div>
 </header>
 
+<h3>🎬 Vídeo mais recente</h3>
+<div id="recent" style="display:grid; grid-template-columns:1fr; gap:10px; padding:10px;"></div>
+
+<h3>🔥 Vídeo mais visto</h3>
+<div id="popular" style="display:grid; grid-template-columns:1fr; gap:10px; padding:10px;"></div>
+
+<h3>📜 Todos os vídeos</h3>
 <div id="videos"></div>
 
 <!-- LOGIN -->
@@ -41,6 +49,7 @@ button { background:red; border:none; color:white; padding:5px; margin:2px; curs
 <script>
 let usuario = localStorage.getItem("user");
 let users = JSON.parse(localStorage.getItem("users")) || [];
+let videos = JSON.parse(localStorage.getItem("videos")) || [];
 
 // LOGIN UI
 window.abrirLogin = () => document.getElementById("loginBox").style.display = "flex";
@@ -54,12 +63,10 @@ window.criarConta = () => {
   let foto = document.getElementById("foto").value.trim() || "https://via.placeholder.com/50";
 
   if(!user || !pass) return alert("Preencha tudo!");
-
   if(users.find(u=>u.username===user)) return alert("Usuário já existe!");
 
   users.push({username:user, password:pass, nome, foto});
   localStorage.setItem("users",JSON.stringify(users));
-
   alert("Conta criada!");
 };
 
@@ -90,12 +97,10 @@ window.uploadVideo = () => {
     let file = input.files[0];
     if(!file) return alert("Nenhum vídeo escolhido");
 
-    let titulo = prompt("Título do vídeo:");
-    if(!titulo) titulo = file.name;
+    let titulo = prompt("Título do vídeo:") || file.name;
 
     let reader = new FileReader();
     reader.onload = ()=>{
-      let videos = JSON.parse(localStorage.getItem("videos")) || [];
       let dono = users.find(u=>u.username===usuario);
 
       videos.push({
@@ -106,25 +111,55 @@ window.uploadVideo = () => {
         fotoDono: dono.foto,
         likes:0,
         inscritos:[],
-        comentarios:[]
+        comentarios:[],
+        views:0,
+        data: Date.now()
       });
 
       localStorage.setItem("videos",JSON.stringify(videos));
-      carregarVideos();
+      carregarTodosVideos();
     };
     reader.readAsDataURL(file);
   }
 };
 
-// CARREGAR VÍDEOS
-function carregarVideos(){
+// FUNÇÃO PARA CARREGAR TODOS OS VÍDEOS
+function carregarTodosVideos(term=""){
   let lista = document.getElementById("videos");
-  lista.innerHTML="";
+  let recent = document.getElementById("recent");
+  let popular = document.getElementById("popular");
 
-  let videos = JSON.parse(localStorage.getItem("videos")) || [];
-  videos.forEach((v,i)=>{
+  lista.innerHTML = "";
+  recent.innerHTML = "";
+  popular.innerHTML = "";
+
+  // FILTRAR por pesquisa
+  let filtered = videos.filter(v=>v.titulo.toLowerCase().includes(term.toLowerCase()));
+
+  if(filtered.length==0) return lista.innerHTML="<p>Nenhum vídeo encontrado.</p>";
+
+  // Vídeo mais recente
+  let latest = filtered.reduce((a,b)=>a.data>b.data?a:b);
+  recent.innerHTML = `
+    <div class="video highlight" onclick="abrirVideo(${videos.indexOf(latest)})">
+      <video src="${latest.url}" muted></video>
+      <p><b>${latest.titulo}</b> - ${latest.nomeDono}</p>
+    </div>
+  `;
+
+  // Vídeo mais visto
+  let popularV = filtered.reduce((a,b)=>a.views>b.views?a:b);
+  popular.innerHTML = `
+    <div class="video highlight" onclick="abrirVideo(${videos.indexOf(popularV)})">
+      <video src="${popularV.url}" muted></video>
+      <p><b>${popularV.titulo}</b> - ${popularV.nomeDono} - Views: ${popularV.views}</p>
+    </div>
+  `;
+
+  // Todos os vídeos
+  filtered.forEach((v,i)=>{
     lista.innerHTML += `
-      <div class="video" onclick="abrirVideo(${i})">
+      <div class="video" onclick="abrirVideo(${videos.indexOf(v)})">
         <video src="${v.url}" muted></video>
         <p><b>${v.titulo}</b></p>
         <p>${v.nomeDono}</p>
@@ -132,29 +167,18 @@ function carregarVideos(){
     `;
   });
 }
-carregarVideos();
+carregarTodosVideos();
 
 // PESQUISA
 document.getElementById("pesquisa").oninput = (e)=>{
-  let termo = e.target.value.toLowerCase();
-  let lista = document.getElementById("videos");
-  lista.innerHTML="";
-  let videos = JSON.parse(localStorage.getItem("videos")) || [];
-  videos.forEach((v,i)=>{
-    if(v.titulo.toLowerCase().includes(termo)){
-      lista.innerHTML += `
-      <div class="video" onclick="abrirVideo(${i})">
-        <video src="${v.url}" muted></video>
-        <p><b>${v.titulo}</b></p>
-        <p>${v.nomeDono}</p>
-      </div>
-      `;
-    }
-  });
+  let termo = e.target.value;
+  carregarTodosVideos(termo);
 };
 
 // ABRIR VÍDEO
 window.abrirVideo = (id)=>{
+  videos[id].views = (videos[id].views||0)+1;
+  localStorage.setItem("videos",JSON.stringify(videos));
   localStorage.setItem("videoAtual",id);
   window.location.href = "video.html";
 };
