@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Canal</title>
+
+<style>
+body { background:#0f0f0f; color:white; font-family:Arial; }
+.banner { background:#202020; padding:20px; }
+.videos { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+</style>
+</head>
+
+<body>
+
+<div class="banner">
+  <h1 id="nome"></h1>
+  <p id="inscritos"></p>
+</div>
+
+<div class="videos" id="videos"></div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "COLE_AQUI",
+  projectId: "COLE_AQUI"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+const params = new URLSearchParams(window.location.search);
+const canal = params.get("user");
+
+document.getElementById("nome").innerText = canal;
+
+// CARREGAR VÍDEOS
+async function carregar(){
+  let lista = document.getElementById("videos");
+
+  let query = await getDocs(collection(db, "videos"));
+
+  query.forEach(doc => {
+    let v = doc.data();
+
+    if(v.dono === canal){
+      lista.innerHTML += `
+        <div onclick="abrirVideo('${doc.id}')">
+          <img src="${v.thumb}" width="100%">
+          <p>${v.titulo}</p>
+        </div>
+      `;
+    }
+  });
+}
+
+// CONTAR INSCRITOS
+async function contar(){
+  let total = 0;
+
+  let query = await getDocs(collection(db, "inscricoes"));
+
+  query.forEach(doc => {
+    if(doc.data().canal === canal){
+      total++;
+    }
+  });
+
+  document.getElementById("inscritos").innerText =
+    "Inscritos: " + total;
+}
+
+window.abrirVideo = (id) => {
+  window.location.href = "video.html?id=" + id;
+}
+
+carregar();
+contar();
+
+</script>
+
+</body>
+</html>
