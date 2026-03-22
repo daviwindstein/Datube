@@ -200,6 +200,18 @@ window.fazerLogin = async () => {
     }
   });
 }
+  <div class="login-box" id="criarBox" style="display:none;">
+  <input id="novoUser" placeholder="Novo usuário">
+  <input id="novoPass" type="password" placeholder="Senha">
+  <button onclick="criarContaNova()">Criar</button>
+  <button onclick="fecharCriar()">Fechar</button>
+</div>
+  // 🧹 LIMPAR LOGIN BUGADO
+window.resetarLogin = () => {
+  localStorage.removeItem("user");
+  usuario = null;
+  alert("Login resetado! Agora crie uma nova conta.");
+}
 
 window.criarConta = async () => {
   let user = document.getElementById("user").value;
@@ -291,3 +303,38 @@ carregarVideos();
 
 </body>
 </html>
+<button onclick="resetarLogin()">🔄 Resetar Login</button>
+window.abrirCriarConta = () => {
+  document.getElementById("criarBox").style.display = "flex";
+}
+
+window.fecharCriar = () => {
+  document.getElementById("criarBox").style.display = "none";
+}
+
+window.criarContaNova = async () => {
+  let user = document.getElementById("novoUser").value.trim();
+  let pass = document.getElementById("novoPass").value.trim();
+
+  if(!user || !pass){
+    alert("Preencha tudo!");
+    return;
+  }
+
+  let query = await getDocs(collection(db, "users"));
+
+  for (let doc of query.docs) {
+    if(doc.data().username === user){
+      alert("Usuário já existe!");
+      return;
+    }
+  }
+
+  await addDoc(collection(db, "users"), {
+    username: user,
+    password: pass
+  });
+
+  alert("Conta criada! Agora faça login.");
+  fecharCriar();
+}
