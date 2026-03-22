@@ -105,6 +105,7 @@ window.abrirVideo = (id)=>{
 carregar();
 carregarComentarios();
 <script>
+  
 // NO video.html
 let id = localStorage.getItem("videoAtual");
 let videos = JSON.parse(localStorage.getItem("videos")) || [];
@@ -114,6 +115,11 @@ if(videos[id]){
   document.getElementById("player").src = v.url;
   document.getElementById("titulo").innerText = v.titulo;
   document.getElementById("canal").innerText = v.dono;
+};
+}
+  window.abrirVideoLocal = (id) => {
+  localStorage.setItem("videoAtual", id);
+  window.location.href = "video.html";
 }
 </body>
 </html>
