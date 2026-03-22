@@ -5,87 +5,44 @@
 <title>Datuber</title>
 
 <style>
-body {
-  margin: 0;
-  font-family: Arial;
-  background: #0f0f0f;
-  color: white;
-}
+body { margin:0; font-family:Arial; background:#0f0f0f; color:white; }
 
-/* TOPO */
 header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: #202020;
-  padding: 10px;
+  display:flex;
+  justify-content:space-between;
+  padding:10px;
+  background:#202020;
 }
 
-.logo {
-  color: red;
-  font-size: 22px;
-  font-weight: bold;
-}
+input { padding:5px; }
 
-.search {
-  width: 300px;
-  padding: 5px;
-}
-
-.top-buttons button {
-  margin-left: 5px;
-}
-
-/* GRID */
 #videos {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 15px;
-  padding: 15px;
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  padding:10px;
 }
 
-/* CARD */
-.video {
-  cursor: pointer;
-}
+.video { cursor:pointer; }
+.thumb { width:100%; border-radius:10px; }
 
-.thumb {
-  width: 100%;
-  height: 150px;
-  background: black;
-  border-radius: 10px;
-  object-fit: cover;
-}
-
-.video p {
-  margin: 5px 0;
-}
-
-/* LOGIN */
 .login-box {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background: #202020;
-  padding: 20px;
-  display: none;
-  flex-direction: column;
+  position:fixed;
+  top:50%; left:50%;
+  transform:translate(-50%,-50%);
+  background:#202020;
+  padding:20px;
+  display:none;
+  flex-direction:column;
 }
 
-.login-box input {
-  margin: 5px 0;
-  padding: 5px;
-}
-
-/* BOTÕES */
 button {
-  background: red;
-  color: white;
-  border: none;
-  padding: 6px;
-  cursor: pointer;
-  <button onclick="fecharLogin()">❌</button>
+  background:red;
+  border:none;
+  color:white;
+  padding:5px;
+  margin:2px;
+  cursor:pointer;
 }
 </style>
 </head>
@@ -93,79 +50,24 @@ button {
 <body>
 
 <header>
-  <div class="logo">📺 Datuber</div>
-
-  <input class="search" id="pesquisa" placeholder="Pesquisar...">
-
-  <div class="top-buttons">
+  <h2>📺 Datuber</h2>
+  <input id="pesquisa" placeholder="Pesquisar...">
+  <div>
     <button onclick="abrirLogin()">Login</button>
-    <button onclick="uploadVideo()">📤 Postar</button>
+    <button onclick="uploadVideo()">Postar</button>
   </div>
 </header>
-window.criarConta = async () => { ... }
-window.fazerLogin = async () => { ... }
 
-  
-  let user = document.getElementById("user").value.trim();
-  let pass = document.getElementById("pass").value.trim();
-
-  if(!user || !pass){
-    alert("Preencha tudo!");
-    return;
-  }
-
-  let query = await getDocs(collection(db, "users"));
-
-  for (let doc of query.docs) {
-    if(doc.data().username === user){
-      alert("Usuário já existe!");
-      return;
-    }
-  }
-
-  await addDoc(collection(db, "users"), {
-    username: user,
-    password: pass
-  });
-
-  alert("Conta criada!");
-}
-
-window.fazerLogin = async () => { ... }
-
-  let user = document.getElementById("user").value.trim();
-  let pass = document.getElementById("pass").value.trim();
-
-  if(!user || !pass){
-    alert("Preencha tudo!");
-    return;
-  }
-
-  let query = await getDocs(collection(db, "users"));
-
-  let encontrou = false;
-
-  for (let doc of query.docs) {
-    let data = doc.data();
-
-    if(data.username === user && data.password === pass){
-      encontrou = true;
-      localStorage.setItem("user", user);
-      usuario = user;
-
-      document.getElementById("loginBox").style.display = "none";
-      alert("Login feito!");
-      break;
-    }
-  }
-
-  if(!encontrou){
-    alert("Usuário ou senha errado!");
-  }
-}
-
-<!-- VÍDEOS -->
 <div id="videos"></div>
+
+<!-- LOGIN -->
+<div class="login-box" id="loginBox">
+  <input id="user" placeholder="Usuário">
+  <input id="pass" type="password" placeholder="Senha">
+  <button onclick="fazerLogin()">Entrar</button>
+  <button onclick="criarConta()">Criar Conta</button>
+  <button onclick="fecharLogin()">Fechar</button>
+</div>
 
 <script type="module">
 
@@ -174,7 +76,6 @@ import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.c
 
 const firebaseConfig = {
   apiKey: "COLE_AQUI",
-  authDomain: "COLE_AQUI",
   projectId: "COLE_AQUI"
 };
 
@@ -183,286 +84,112 @@ const db = getFirestore(app);
 
 let usuario = localStorage.getItem("user");
 
-// 🔐 LOGIN UI
-window.abrirLogin = () => {
-  document.getElementById("loginBox").style.display = "flex";
-}
+// LOGIN UI
+window.abrirLogin = () => document.getElementById("loginBox").style.display = "flex";
+window.fecharLogin = () => document.getElementById("loginBox").style.display = "none";
 
-window.fazerLogin = async () => {
-  let user = document.getElementById("user").value;
-  let pass = document.getElementById("pass").value;
-
-  let users = await getDocs(collection(db, "users"));
-
-  users.forEach(u => {
-    let data = u.data();
-    if(data.username === user && data.password === pass){
-      usuario = user;
-      localStorage.setItem("user", user);
-      alert("Logado!");
-      document.getElementById("loginBox").style.display = "none";
-    }
-  });
-}
-  <div class="login-box" id="criarBox" style="display:none;">
-  <input id="novoUser" placeholder="Novo usuário">
-  <input id="novoPass" type="password" placeholder="Senha">
-  <button onclick="criarContaNova()">Criar</button>
-  <button onclick="fecharCriar()">Fechar</button>
-</div>
-  // 🧹 LIMPAR LOGIN BUGADO
-window.resetarLogin = () => {
-  localStorage.removeItem("user");
-  usuario = null;
-  alert("Login resetado! Agora crie uma nova conta.");
-}
-
+// CRIAR CONTA
 window.criarConta = async () => {
-  let user = document.getElementById("user").value;
-  let pass = document.getElementById("pass").value;
+  let user = userInput();
+  let pass = passInput();
 
-  await addDoc(collection(db, "users"), {
-    username: user,
-    password: pass
-  });
+  if(!user || !pass) return alert("Preencha tudo!");
 
+  let q = await getDocs(collection(db,"users"));
+  for(let d of q.docs){
+    if(d.data().username === user) return alert("Já existe!");
+  }
+
+  await addDoc(collection(db,"users"), {username:user, password:pass});
   alert("Conta criada!");
 }
 
-// 📤 POSTAR VÍDEO
-window.uploadVideo = async () => {
-  if(!usuario){
-    alert("Faça login!");
-    return;
+// LOGIN
+window.fazerLogin = async () => {
+  let user = userInput();
+  let pass = passInput();
+
+  let q = await getDocs(collection(db,"users"));
+  for(let d of q.docs){
+    let u = d.data();
+    if(u.username===user && u.password===pass){
+      usuario=user;
+      localStorage.setItem("user",user);
+      fecharLogin();
+      return alert("Logado!");
+    }
   }
 
-  let url = prompt("Link do vídeo do YouTube:");
+  alert("Erro login!");
+}
+
+// POSTAR
+window.uploadVideo = async () => {
+  if(!usuario) return alert("Faça login!");
+
+  let url = prompt("Link YouTube:");
   let titulo = prompt("Título:");
 
   let id = url.split("v=")[1];
   let thumb = `https://img.youtube.com/vi/${id}/0.jpg`;
   let embed = `https://www.youtube.com/embed/${id}`;
 
-  await addDoc(collection(db, "videos"), {
-    titulo,
-    url: embed,
-    thumb,
-    dono: usuario
+  await addDoc(collection(db,"videos"),{
+    titulo, url:embed, thumb, dono:usuario
   });
 
   carregarVideos();
 }
 
-// 📺 CARREGAR VÍDEOS
+// CARREGAR
 async function carregarVideos(){
   let lista = document.getElementById("videos");
-  lista.innerHTML = "";
+  lista.innerHTML="";
 
-  let query = await getDocs(collection(db, "videos"));
+  let q = await getDocs(collection(db,"videos"));
 
-  query.forEach(doc => {
+  q.forEach(doc=>{
     let v = doc.data();
 
-    lista.innerHTML += `
+    lista.innerHTML+=`
+    <div class="video" onclick="abrirVideo('${doc.id}')">
+      <img class="thumb" src="${v.thumb}">
+      <p>${v.titulo}</p>
+      <p>${v.dono}</p>
+    </div>`;
+  });
+}
+
+// PESQUISA
+document.getElementById("pesquisa").oninput = async (e)=>{
+  let termo = e.target.value.toLowerCase();
+  let lista = document.getElementById("videos");
+  lista.innerHTML="";
+
+  let q = await getDocs(collection(db,"videos"));
+
+  q.forEach(doc=>{
+    let v = doc.data();
+    if(v.titulo.toLowerCase().includes(termo)){
+      lista.innerHTML+=`
       <div class="video" onclick="abrirVideo('${doc.id}')">
         <img class="thumb" src="${v.thumb}">
         <p>${v.titulo}</p>
-        <p>👤 ${v.dono}</p>
-      </div>
-    `;
+      </div>`;
+    }
   });
 }
 
-// 🔍 PESQUISA REAL
-document.getElementById("pesquisa").addEventListener("input", async (e) => {
-  let termo = e.target.value.toLowerCase();
-
-  let lista = document.getElementById("videos");
-  lista.innerHTML = "";
-
-  let query = await getDocs(collection(db, "videos"));
-
-  query.forEach(doc => {
-    let v = doc.data();
-
-    if(v.titulo.toLowerCase().includes(termo)){
-      lista.innerHTML += `
-        <div class="video" onclick="abrirVideo('${doc.id}')">
-          <img class="thumb" src="${v.thumb}">
-          <p>${v.titulo}</p>
-        </div>
-      
-    }sSX
-  });
-});
-
-// ▶ ABRIR VÍDEO
-window.abrirVideo = (id) => {
-  window.location.href = "video.html?id=" + id;
+window.abrirVideo = (id)=>{
+  window.location.href = "video.html?id="+id;
 }
+
+function userInput(){ return document.getElementById("user").value.trim(); }
+function passInput(){ return document.getElementById("pass").value.trim(); }
 
 carregarVideos();
 
 </script>
-<script type="module">
 
-window.criarConta = async () => {
-  let user = document.getElementById("user").value.trim();
-  let pass = document.getElementById("pass").value.trim();
-
-  if(!user || !pass){
-    alert("Preencha tudo!");
-    return;
-  }
-
-  let query = await getDocs(collection(db, "users"));
-
-  for (let doc of query.docs) {
-    if(doc.data().username === user){
-      alert("Usuário já existe!");
-      return;
-    }
-  }
-
-  await addDoc(collection(db, "users"), {
-    username: user,
-    password: pass
-  });
-
-  alert("Conta criada!");
-}
-
-window.fazerLogin = async () => {
-  let user = document.getElementById("user").value.trim();
-  let pass = document.getElementById("pass").value.trim();
-
-  if(!user || !pass){
-    alert("Preencha tudo!");
-    return;
-  }
-
-  let query = await getDocs(collection(db, "users"));
-
-  let encontrou = false;
-
-  for (let doc of query.docs) {
-    let data = doc.data();
-
-    if(data.username === user && data.password === pass){
-      encontrou = true;
-      localStorage.setItem("user", user);
-      usuario = user;
-
-      document.getElementById("loginBox").style.display = "none";
-      alert("Login feito!");
-      break;
-    }
-  }
-
-  if(!encontrou){
-    alert("Usuário ou senha errado!");
-  }
-}
-
-window.abrirCriarConta = () => {
-  document.getElementById("criarBox").style.display = "flex";
-}
-
-window.fecharCriar = () => {
-  document.getElementById("criarBox").style.display = "none";
-}
-
-window.criarContaNova = async () => {
-  let user = document.getElementById("novoUser").value.trim();
-  let pass = document.getElementById("novoPass").value.trim();
-
-  if(!user || !pass){
-    alert("Preencha tudo!");
-    return;
-  }
-
-  let query = await getDocs(collection(db, "users"));
-
-  for (let doc of query.docs) {
-    if(doc.data().username === user){
-      alert("Usuário já existe!");
-      return;
-    }
-  }
-
-  await addDoc(collection(db, "users"), {
-    username: user,
-    password: pass
-  });
-
-  alert("Conta criada! Agora faça login.");
-  fecharCriar();
-}
-
-</script>
 </body>
 </html>
-<script type="module">
-
-// 🔥 SEU CÓDIGO AQUI DENTRO
-
-window.criarConta = async () => {
-  let user = document.getElementById("user").value.trim();
-  let pass = document.getElementById("pass").value.trim();
-
-  if(!user || !pass){
-    alert("Preencha tudo!");
-    return;
-  }
-
-  let query = await getDocs(collection(db, "users"));
-
-  for (let doc of query.docs) {
-    if(doc.data().username === user){
-      alert("Usuário já existe!");
-      return;
-    }
-  }
-
-  await addDoc(collection(db, "users"), {
-    username: user,
-    password: pass
-  });
-
-  alert("Conta criada!");
-}
-
-window.fazerLogin = async () => {
-  let user = document.getElementById("user").value.trim();
-  let pass = document.getElementById("pass").value.trim();
-
-  if(!user || !pass){
-    alert("Preencha tudo!");
-    return;
-  }
-
-  let query = await getDocs(collection(db, "users"));
-
-  let encontrou = false;
-
-  for (let doc of query.docs) {
-    let data = doc.data();
-
-    if(data.username === user && data.password === pass){
-      encontrou = true;
-      localStorage.setItem("user", user);
-      usuario = user;
-
-      document.getElementById("loginBox").style.display = "none";
-      alert("Login feito!");
-      break;
-    }
-  }
-
-  if(!encontrou){
-    alert("Usuário ou senha errado!");
-  }
-}
-
-</script>
-
