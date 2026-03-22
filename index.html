@@ -123,7 +123,7 @@ window.fazerLogin = async () => {
   alert("Erro login!");
 }
 
-// POSTAR
+// POSTAR VÍDEO DO PC
 window.uploadVideo = () => {
   if(!usuario){
     alert("Faça login!");
@@ -133,7 +133,6 @@ window.uploadVideo = () => {
   let input = document.createElement("input");
   input.type = "file";
   input.accept = "video/*";
-
   input.click();
 
   input.onchange = () => {
@@ -149,8 +148,9 @@ window.uploadVideo = () => {
     let reader = new FileReader();
 
     reader.onload = () => {
-      let url = reader.result; // 🔥 vídeo em base64
+      let url = reader.result; // vídeo em base64
 
+      // pegar vídeos existentes ou criar lista
       let videos = JSON.parse(localStorage.getItem("videos")) || [];
 
       videos.push({
@@ -168,14 +168,7 @@ window.uploadVideo = () => {
     reader.readAsDataURL(file);
   }
 }
-  carregarVideos();
-}
-let id = localStorage.getItem("videoAtual");
-let videos = JSON.parse(localStorage.getItem("videos")) || [];
-
-let v = videos[id];
-
-document.getElementById("player").src = v.url;
+  // CARREGAR VÍDEOS LOCAIS
 function carregarVideosLocal(){
   let lista = document.getElementById("videos");
   lista.innerHTML = "";
@@ -185,13 +178,13 @@ function carregarVideosLocal(){
   videos.forEach((v, i) => {
     lista.innerHTML += `
       <div class="video" onclick="abrirVideoLocal(${i})">
-        <video src="${v.url}" width="300"></video>
+        <video src="${v.url}" width="300" controls></video>
         <p>${v.titulo}</p>
+        <p>${v.dono}</p>
       </div>
     `;
   });
 }
-
 // PESQUISA
 document.getElementById("pesquisa").oninput = async (e)=>{
   let termo = e.target.value.toLowerCase();
