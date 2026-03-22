@@ -4,11 +4,12 @@
 <meta charset="UTF-8">
 <title>Assistir</title>
 <style>
-body { background:#0f0f0f; color:white; font-family:Arial; }
-.container { display:flex; gap:20px; }
-.video { flex:2; }
-.side { flex:1; }
-video { width:100%; height:auto; }
+body{background:#0f0f0f;color:white;font-family:Arial;}
+video{width:100%;height:auto;}
+.container{display:flex;gap:20px;}
+.video{flex:2;}
+.side{flex:1;}
+.video-card{border:1px solid #333;padding:5px;border-radius:5px;margin-bottom:10px;cursor:pointer;}
 </style>
 </head>
 <body>
@@ -23,7 +24,6 @@ video { width:100%; height:auto; }
 </div>
 
 <script>
-// PEGAR VÍDEO ATUAL
 let id = localStorage.getItem("videoAtual");
 let videos = JSON.parse(localStorage.getItem("videos")) || [];
 
@@ -32,10 +32,24 @@ if(videos[id]){
   document.getElementById("player").src = v.url;
   document.getElementById("titulo").innerText = v.titulo;
   document.getElementById("canal").innerText = v.dono;
-} else {
-  document.getElementById("player").src = "";
-  document.getElementById("titulo").innerText = "Vídeo não encontrado";
-  document.getElementById("canal").innerText = "";
+}
+
+// Vídeos recomendados
+let recomendados = document.getElementById("recomendados");
+videos.forEach((v,i)=>{
+  if(i!=id){
+    recomendados.innerHTML += `
+      <div class="video-card" onclick="abrirVideo(${i})">
+        <video src="${v.url}" width="100%" controls></video>
+        <p>${v.titulo}</p>
+      </div>
+    `;
+  }
+});
+
+function abrirVideo(i){
+  localStorage.setItem("videoAtual", i);
+  window.location.reload();
 }
 </script>
 
