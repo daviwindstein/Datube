@@ -124,39 +124,71 @@ window.fazerLogin = async () => {
 }
 
 // POSTAR
-window.uploadVideo = async () => {
-  if(!usuario) return alert("Faça login!");
+window.uploadVideo = () => {
+  if(!usuario){
+    alert("Faça login!");
+    return;
+  }
 
-  let url = prompt("Link YouTube:");
-  let titulo = prompt("Título:");
+  let input = document.createElement("input");
+  input.type = "file";
+  input.accept = "video/*";
 
-  let id = url.split("v=")[1];
-  let thumb = `https://img.youtube.com/vi/${id}/0.jpg`;
-  let embed = `https://www.youtube.com/embed/${id}`;
+  input.click();
 
-  await addDoc(collection(db,"videos"),{
-    titulo, url:embed, thumb, dono:usuario
-  });
+  input.onchange = () => {
+    let file = input.files[0];
 
+    if(!file){
+      alert("Nenhum vídeo escolhido");
+      return;
+    }
+
+    let titulo = prompt("Título do vídeo:");
+
+    let reader = new FileReader();
+
+    reader.onload = () => {
+      let url = reader.result; // 🔥 vídeo em base64
+
+      let videos = JSON.parse(localStorage.getItem("videos")) || [];
+
+      videos.push({
+        titulo: titulo,
+        url: url,
+        dono: usuario
+      });
+
+      localStorage.setItem("videos", JSON.stringify(videos));
+
+      alert("Vídeo postado!");
+      carregarVideosLocal();
+    }
+
+    reader.readAsDataURL(file);
+  }
+}
   carregarVideos();
 }
+let id = localStorage.getItem("videoAtual");
+let videos = JSON.parse(localStorage.getItem("videos")) || [];
 
-// CARREGAR
-async function carregarVideos(){
+let v = videos[id];
+
+document.getElementById("player").src = v.url;
+function carregarVideosLocal(){
   let lista = document.getElementById("videos");
-  lista.innerHTML="";
+  lista.innerHTML = "";
 
-  let q = await getDocs(collection(db,"videos"));
+  let videos = JSON.parse(localStorage.getItem("videos")) || [];
 
-  q.forEach(doc=>{
-    let v = doc.data();
-
-    lista.innerHTML+=`
-    <div class="video" onclick="abrirVideo('${doc.id}')">
-      <img class="thumb" src="${v.thumb}">
-      <p>${v.titulo}</p>
-      <p>${v.dono}</p>
-    </div>`;
+  videos.forEach((v, i) => {
+    lista.innerHTML += `
+      <div class="video" onclick="abrirVideoLocal(${i})">
+        <video src="${v.url}" width="300"></video>
+        <p>${v.titulo}</p>
+      </div>
+    `;
   });
 }
 
