@@ -84,7 +84,7 @@ window.fazerLogin = () => {
   } else alert("Erro no login!");
 };
 
-// UPLOAD VÍDEO COM LOGICA DE ATUALIZAR IMEDIATAMENTE
+// UPLOAD VÍDEO
 window.uploadVideo = () => {
   if(!usuario){ alert("Faça login!"); return; }
 
@@ -116,23 +116,21 @@ window.uploadVideo = () => {
         data: Date.now()
       };
 
-      // adiciona no início do array (mais recente primeiro)
+      // adiciona no início do array
       videos.unshift(novoVideo);
 
-      // salva
+      // salva no storage
       localStorage.setItem("videos",JSON.stringify(videos));
 
-      // atualiza página inicial imediatamente
+      // atualiza página
       carregarTodosVideos();
-
-      // foca no vídeo recém postado
       alert(`Vídeo "${titulo}" postado!`);
     };
     reader.readAsDataURL(file);
   }
 };
 
-// FUNÇÃO PARA CARREGAR TODOS OS VÍDEOS (recentes + popular + lista)
+// CARREGAR TODOS OS VÍDEOS
 function carregarTodosVideos(term=""){
   let lista = document.getElementById("videos");
   let recent = document.getElementById("recent");
@@ -142,13 +140,12 @@ function carregarTodosVideos(term=""){
   recent.innerHTML = "";
   popular.innerHTML = "";
 
-  // FILTRA por pesquisa
   let filtered = videos.filter(v=>v.titulo.toLowerCase().includes(term.toLowerCase()));
 
   if(filtered.length==0) return lista.innerHTML="<p>Nenhum vídeo encontrado.</p>";
 
-  // Vídeo mais recente
-  let latest = filtered[0]; // sempre primeiro do array
+  // Mais recente
+  let latest = filtered[0];
   recent.innerHTML = `
     <div class="video highlight" onclick="abrirVideo(${videos.indexOf(latest)})">
       <video src="${latest.url}" muted></video>
@@ -156,7 +153,7 @@ function carregarTodosVideos(term=""){
     </div>
   `;
 
-  // Vídeo mais visto
+  // Mais visto
   let popularV = filtered.reduce((a,b)=>a.views>b.views?a:b);
   popular.innerHTML = `
     <div class="video highlight" onclick="abrirVideo(${videos.indexOf(popularV)})">
@@ -192,6 +189,5 @@ window.abrirVideo = (id)=>{
   window.location.href = "video.html";
 };
 </script>
-
 </body>
 </html>
