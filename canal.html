@@ -8,48 +8,33 @@ body{background:#0f0f0f;color:white;font-family:Arial;}
 .videos{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
 </style>
 </head>
-
 <body>
 
 <h1 id="nome"></h1>
-<p id="inscritos"></p>
-
 <div class="videos" id="videos"></div>
 
-<script type="module">
-
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-
-const app = initializeApp({apiKey:"COLE_AQUI", projectId:"COLE_AQUI"});
-const db = getFirestore(app);
-
+<script>
+// PEGAR CANAL
 let canal = new URLSearchParams(location.search).get("user");
+document.getElementById("nome").innerText = canal;
 
-nome.innerText = canal;
+let videos = JSON.parse(localStorage.getItem("videos")) || [];
+const lista = document.getElementById("videos");
 
-async function carregar(){
-  let q = await getDocs(collection(db,"videos"));
-
-  q.forEach(doc=>{
-    let v = doc.data();
-
-    if(v.dono===canal){
-      videos.innerHTML+=`
-      <div onclick="abrirVideo('${doc.id}')">
-        <img src="${v.thumb}" width="100%">
+videos.forEach((v,i)=>{
+  if(v.dono === canal){
+    lista.innerHTML += `
+      <div class="video" onclick="abrirVideoLocal(${i})">
+        <video src="${v.url}" width="300" controls></video>
         <p>${v.titulo}</p>
       </div>`;
-    }
-  });
+  }
+});
+
+function abrirVideoLocal(id){
+  localStorage.setItem("videoAtual", id);
+  window.location.href = "video.html";
 }
-
-window.abrirVideo = (id)=>{
-  location.href="video.html?id="+id;
-}
-
-carregar();
-
 </script>
 
 </body>
