@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Assistir - Datuber</title>
+
+<style>
+body {
+  background:#0f0f0f;
+  color:white;
+  font-family:Arial;
+}
+
+.video-container {
+  max-width:900px;
+  margin:auto;
+}
+
+video {
+  width:100%;
+}
+
+button {
+  background:red;
+  color:white;
+  border:none;
+  padding:8px;
+  margin:5px;
+  cursor:pointer;
+}
+
+.comentarios {
+  margin-top:20px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="video-container">
+
+  <video id="player" controls></video>
+
+  <h2 id="titulo"></h2>
+  <p id="dono"></p>
+
+  <button onclick="like()">👍 Like</button>
+  <button onclick="inscrever()">🔔 Inscrever-se</button>
+
+  <div class="comentarios">
+    <h3>Comentários</h3>
+    <button onclick="comentar()">Comentar</button>
+    <div id="listaComentarios"></div>
+  </div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "COLE_AQUI",
+  authDomain: "COLE_AQUI",
+  projectId: "COLE_AQUI"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// 🔥 PEGAR ID DO VÍDEO
+const params = new URLSearchParams(window.location.search);
+const videoId = params.get("id");
+
+let usuario = localStorage.getItem("user");
+
+// 📺 CARREGAR VÍDEO
+async function carregarVideo(){
+  let query = await getDocs(collection(db, "videos"));
+
+  query.forEach(doc => {
+    if(doc.id === videoId){
+      let v = doc.data();
+
+      document.getElementById("player").src = v.url;
+      document.getElementById("titulo").innerText = v.titulo;
+      document.getElementById("dono").innerText = "Canal: " + v.dono;
+    }
+  });
+}
+
+// 💬 COMENTAR
+window.comentar = async () => {
+  if(!usuario){
+    alert("Faça login!");
+    return;
+  }
+
+  let texto = prompt("Seu comentário:");
+
+  await addDoc(collection(db, "comentarios"), {
+    videoId: videoId,
+    usuario: usuario,
+    texto: texto
+  });
+
+  carregarComentarios();
+}
+
+// 📥 CARREGAR COMENTÁRIOS
+async function carregarComentarios(){
+  let lista = document.getElementById("listaComentarios");
+  lista.innerHTML = "";
+
+  let query = await getDocs(collection(db, "comentarios"));
+
+  query.forEach(doc => {
+    let c = doc.data();
+
+    if(c.videoId === videoId){
+      lista.innerHTML += `<p><b>${c.usuario}</b>: ${c.texto}</p>`;
+    }
+  });
+}
+
+// ❤️ LIKE (simples)
+window.like = () => {
+  alert("Você curtiu!");
+}
+
+// 🔔 INSCREVER
+window.inscrever = () => {
+  alert("Você se inscreveu!");
+}
+
+carregarVideo();
+carregarComentarios();
+
+</script>
+
+</body>
+</html>
