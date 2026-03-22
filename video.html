@@ -1,15 +1,20 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
 <meta charset="UTF-8">
 <title>Assistir</title>
 <style>
-body{background:#0f0f0f;color:white;font-family:Arial;}
-video{width:100%;height:auto;}
-.container{display:flex;gap:20px;}
-.video{flex:2;}
-.side{flex:1;}
-.video-card{border:1px solid #333;padding:5px;border-radius:5px;margin-bottom:10px;cursor:pointer;}
+body { background:#0f0f0f; color:white; font-family:Arial; margin:0; padding:0; }
+.container { display:flex; gap:20px; padding:10px; }
+.video { flex:2; }
+.side { flex:1; }
+video { width:100%; height:auto; border-radius:5px; }
+button { background:red; border:none; color:white; padding:5px; margin:2px; cursor:pointer; }
+.comment-box { margin-top:10px; }
+.comment { border-top:1px solid #333; padding:5px 0; }
+.comment b { color:#0af; }
+.recommend { border:1px solid #333; padding:5px; margin-bottom:5px; cursor:pointer; border-radius:5px; }
+.recommend img { width:100%; border-radius:5px; }
 </style>
 </head>
 <body>
@@ -18,38 +23,107 @@ video{width:100%;height:auto;}
   <div class="video">
     <video id="player" controls></video>
     <h2 id="titulo"></h2>
-    <p id="canal"></p>
+    <div style="display:flex; align-items:center; gap:10px;">
+      <img id="canalFoto" src="" width="50" height="50" style="border-radius:50%;">
+      <p id="canal" style="cursor:pointer;color:#0af"></p>
+      <button id="inscreverBtn">Inscrever</button>
+    </div>
+    <p id="likes">Likes: 0</p>
+    <button id="likeBtn">👍 Like</button>
+
+    <h3>Comentários</h3>
+    <div class="comment-box" id="comentarios"></div>
+    <button onclick="comentar()">Comentar</button>
   </div>
+
   <div class="side" id="recomendados"></div>
 </div>
 
 <script>
-let id = localStorage.getItem("videoAtual");
+let usuario = localStorage.getItem("user");
+let id = parseInt(localStorage.getItem("videoAtual"));
 let videos = JSON.parse(localStorage.getItem("videos")) || [];
+let users = JSON.parse(localStorage.getItem("users")) || [];
+let v = videos[id];
+let dono = v.dono;
 
-if(videos[id]){
-  let v = videos[id];
-  document.getElementById("player").src = v.url;
-  document.getElementById("titulo").innerText = v.titulo;
-  document.getElementById("canal").innerText = v.dono;
+// CARREGAR VÍDEO
+document.getElementById("player").src = v.url;
+document.getElementById("titulo").innerText = v.titulo;
+document.getElementById("likes").innerText = "Likes: " + v.likes;
+
+let userObj = users.find(u=>u.username===dono);
+document.getElementById("canal").innerText = userObj.nome;
+document.getElementById("canalFoto").src = userObj.foto;
+
+// INSCRITIR
+let inscreverBtn = document.getElementById("inscreverBtn");
+inscreverBtn.onclick = ()=>{
+  if(!usuario){ alert("Faça login"); return; }
+  if(!v.inscritos) v.inscritos=[];
+  if(!v.inscritos.includes(usuario)){
+    v.inscritos.push(usuario);
+    localStorage.setItem("videos",JSON.stringify(videos));
+    alert("Inscrito!");
+    atualizarInscritos();
+  } else alert("Você já está inscrito!");
+};
+
+function atualizarInscritos(){
+  inscreverBtn.innerText = v.inscritos.includes(usuario) ? "Inscrito" : "Inscrever";
+}
+atualizarInscritos();
+
+// LIKE
+document.getElementById("likeBtn").onclick = ()=>{
+  if(!v.likes) v.likes=0;
+  v.likes++;
+  localStorage.setItem("videos",JSON.stringify(videos));
+  document.getElementById("likes").innerText = "Likes: " + v.likes;
+};
+
+// COMENTÁRIOS
+function carregarComentarios(){
+  let box = document.getElementById("comentarios");
+  box.innerHTML="";
+  if(!v.comentarios) v.comentarios=[];
+  v.comentarios.forEach(c=>{
+    box.innerHTML += `<div class="comment"><b>${c.usuario}</b>: ${c.texto}</div>`;
+  });
+}
+carregarComentarios();
+
+function comentar(){
+  if(!usuario){ alert("Faça login"); return; }
+  let texto = prompt("Comentário:");
+  if(!texto) return;
+  if(!v.comentarios) v.comentarios=[];
+  v.comentarios.push({usuario,texto});
+  localStorage.setItem("videos",JSON.stringify(videos));
+  carregarComentarios();
 }
 
-// Vídeos recomendados
-let recomendados = document.getElementById("recomendados");
-videos.forEach((v,i)=>{
-  if(i!=id){
-    recomendados.innerHTML += `
-      <div class="video-card" onclick="abrirVideo(${i})">
-        <video src="${v.url}" width="100%" controls></video>
-        <p>${v.titulo}</p>
-      </div>
-    `;
-  }
+// ABRIR CANAL
+document.getElementById("canal").onclick = ()=>{ localStorage.setItem("canalAtual",dono); window.location.href="canal.html"; }
+document.getElementById("canalFoto").onclick = ()=>{ localStorage.setItem("canalAtual",dono); window.location.href="canal.html"; }
+
+// RECOMENDAÇÕES
+let recom = document.getElementById("recomendados");
+videos.forEach((vid,i)=>{
+  if(i===id) return;
+  let u = users.find(usr=>usr.username===vid.dono);
+  recom.innerHTML += `
+    <div class="recommend" onclick="abrirVideo(${i})">
+      <video src="${vid.url}" width="100%" height="100" muted></video>
+      <p><b>${vid.titulo}</b></p>
+      <p style="color:#0af">${u.nome}</p>
+    </div>
+  `;
 });
 
 function abrirVideo(i){
-  localStorage.setItem("videoAtual", i);
-  window.location.reload();
+  localStorage.setItem("videoAtual",i);
+  location.reload();
 }
 </script>
 
