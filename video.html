@@ -141,3 +141,35 @@ carregarComentarios();
 
 </body>
 </html>
+<button onclick="inscrever()">🔔 Inscrever-se</button>
+<p id="inscritos"></p>
+async function inscrever(){
+  if(!usuario){
+    alert("Faça login!");
+    return;
+  }
+
+  await addDoc(collection(db, "inscricoes"), {
+    canal: donoVideo,
+    usuario: usuario
+  });
+
+  alert("Inscrito!");
+  contarInscritos();
+}
+
+// CONTAR INSCRITOS
+async function contarInscritos(){
+  let total = 0;
+
+  let query = await getDocs(collection(db, "inscricoes"));
+
+  query.forEach(doc => {
+    if(doc.data().canal === donoVideo){
+      total++;
+    }
+  });
+
+  document.getElementById("inscritos").innerText =
+    "Inscritos: " + total;
+}
