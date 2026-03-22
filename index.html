@@ -229,6 +229,57 @@ if(videos[id]){
 carregarVideos();
 
 </script>
+// CARREGAR VÍDEOS NA PÁGINA INICIAL
+function carregarVideosLocal(){
+  const lista = document.getElementById("videos");
+  lista.innerHTML = "";
 
+  let videos = JSON.parse(localStorage.getItem("videos")) || [];
+
+  videos.forEach((v, i) => {
+    lista.innerHTML += `
+      <div class="video" onclick="abrirVideoLocal(${i})">
+        <video src="${v.url}" width="300" controls></video>
+        <p>${v.titulo}</p>
+        <p>${v.dono}</p>
+      </div>
+    `;
+  });
+}
+  // PESQUISAR VÍDEOS
+document.getElementById("pesquisa").oninput = (e) => {
+  const termo = e.target.value.toLowerCase();
+  const lista = document.getElementById("videos");
+  lista.innerHTML = "";
+
+  let videos = JSON.parse(localStorage.getItem("videos")) || [];
+
+  videos.forEach((v, i) => {
+    if(v.titulo.toLowerCase().includes(termo)){
+      lista.innerHTML += `
+        <div class="video" onclick="abrirVideoLocal(${i})">
+          <video src="${v.url}" width="300" controls></video>
+          <p>${v.titulo}</p>
+          <p>${v.dono}</p>
+        </div>
+      `;
+    }
+  });
+}
+  // ABRIR VÍDEO LOCAL
+window.abrirVideoLocal = (id) => {
+  localStorage.setItem("videoAtual", id);
+  window.location.href = "video.html";
+}
+  // NO video.html
+let id = localStorage.getItem("videoAtual");
+let videos = JSON.parse(localStorage.getItem("videos")) || [];
+
+if(videos[id]){
+  let v = videos[id];
+  document.getElementById("player").src = v.url;
+  document.getElementById("titulo").innerText = v.titulo;
+  document.getElementById("canal").innerText = v.dono;
+}
 </body>
 </html>
