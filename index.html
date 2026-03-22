@@ -6,28 +6,85 @@
 
 <style>
 body {
+  margin: 0;
+  font-family: Arial;
   background: #0f0f0f;
   color: white;
-  font-family: Arial;
 }
 
+/* TOPO */
 header {
   display: flex;
-  gap: 10px;
-  padding: 10px;
+  align-items: center;
+  justify-content: space-between;
   background: #202020;
+  padding: 10px;
 }
 
+.logo {
+  color: red;
+  font-size: 22px;
+  font-weight: bold;
+}
+
+.search {
+  width: 300px;
+  padding: 5px;
+}
+
+.top-buttons button {
+  margin-left: 5px;
+}
+
+/* GRID */
+#videos {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  padding: 15px;
+}
+
+/* CARD */
+.video {
+  cursor: pointer;
+}
+
+.thumb {
+  width: 100%;
+  height: 150px;
+  background: black;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.video p {
+  margin: 5px 0;
+}
+
+/* LOGIN */
+.login-box {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: #202020;
+  padding: 20px;
+  display: none;
+  flex-direction: column;
+}
+
+.login-box input {
+  margin: 5px 0;
+  padding: 5px;
+}
+
+/* BOTÕES */
 button {
   background: red;
   color: white;
   border: none;
-  padding: 5px;
+  padding: 6px;
   cursor: pointer;
-}
-
-.video {
-  margin: 10px;
 }
 </style>
 </head>
@@ -35,129 +92,101 @@ button {
 <body>
 
 <header>
-  <button onclick="registrar()">Criar Conta</button>
-  <button onclick="login()">Login</button>
-  <button onclick="uploadVideo()">📤 Enviar Vídeo</button>
-  <button onclick="verCanal()">Meu Canal</button>
-  <button onclick="pesquisar()">Pesquisar</button>
+  <div class="logo">📺 Datuber</div>
+
+  <input class="search" id="pesquisa" placeholder="Pesquisar...">
+
+  <div class="top-buttons">
+    <button onclick="abrirLogin()">Login</button>
+    <button onclick="uploadVideo()">📤 Postar</button>
+  </div>
 </header>
 
-<h2>📺 Datuber</h2>
+<!-- LOGIN -->
+<div class="login-box" id="loginBox">
+  <input id="user" placeholder="Usuário">
+  <input id="pass" type="password" placeholder="Senha">
+  <button onclick="fazerLogin()">Entrar</button>
+  <button onclick="criarConta()">Criar Conta</button>
+</div>
 
+<!-- VÍDEOS -->
 <div id="videos"></div>
 
 <script type="module">
 
-// 🔥 IMPORT FIREBASE
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-app.js";
 import { getFirestore, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.0/firebase-storage.js";
 
-// ⚠️ COLOQUE SEUS DADOS DO FIREBASE AQUI
 const firebaseConfig = {
   apiKey: "COLE_AQUI",
   authDomain: "COLE_AQUI",
-  projectId: "COLE_AQUI",
-  storageBucket: "COLE_AQUI",
+  projectId: "COLE_AQUI"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const storage = getStorage(app);
 
-// 👤 USUÁRIO
-let usuarioLogado = null;
+let usuario = localStorage.getItem("user");
 
-let usuarioLogado = null;
-
-// 🔐 CRIAR CONTA
-window.registrar = async () => {
-  let username = prompt("Crie um usuário:");
-  let senha = prompt("Crie uma senha:");
-
-  if(!username || !senha){
-    alert("Preencha tudo!");
-    return;
-  }
-
-  let users = await getDocs(collection(db, "users"));
-  let existe = false;
-
-  users.forEach(u => {
-    if(u.data().username === username){
-      existe = true;
-    }
-  });
-
-  if(existe){
-    alert("Esse nome já existe!");
-    return;
-  }
-
-  await addDoc(collection(db, "users"), {
-    username: username,
-    password: senha
-  });
-
-  alert("Conta criada com sucesso!");
+// 🔐 LOGIN UI
+window.abrirLogin = () => {
+  document.getElementById("loginBox").style.display = "flex";
 }
 
-// 🔓 LOGIN CORRIGIDO
-window.login = async () => {
-  let username = prompt("Usuário:");
-  let senha = prompt("Senha:");
-
-  if(!username || !senha){
-    alert("Preencha tudo!");
-    return;
-  }
+window.fazerLogin = async () => {
+  let user = document.getElementById("user").value;
+  let pass = document.getElementById("pass").value;
 
   let users = await getDocs(collection(db, "users"));
-  let achou = false;
 
   users.forEach(u => {
     let data = u.data();
-
-    if(data.username === username && data.password === senha){
-      usuarioLogado = username;
-      achou = true;
+    if(data.username === user && data.password === pass){
+      usuario = user;
+      localStorage.setItem("user", user);
+      alert("Logado!");
+      document.getElementById("loginBox").style.display = "none";
     }
   });
-
-  if(achou){
-    localStorage.setItem("user", username); // 🔥 salva login
-    alert("Logado como " + username);
-  } else {
-    alert("Usuário ou senha incorretos!");
-  }
 }
 
+window.criarConta = async () => {
+  let user = document.getElementById("user").value;
+  let pass = document.getElementById("pass").value;
+
+  await addDoc(collection(db, "users"), {
+    username: user,
+    password: pass
+  });
+
+  alert("Conta criada!");
+}
+
+// 📤 POSTAR VÍDEO
 window.uploadVideo = async () => {
-  if(!usuarioLogado){
+  if(!usuario){
     alert("Faça login!");
     return;
   }
 
-  let url = prompt("Cole o link do vídeo do YouTube:");
-  let titulo = prompt("Título do vídeo:");
+  let url = prompt("Link do vídeo do YouTube:");
+  let titulo = prompt("Título:");
 
-  if(!url || !titulo){
-    alert("Preencha tudo!");
-    return;
-  }
-
-  // converter link para embed
-  let embed = url.replace("watch?v=", "embed/");
+  let id = url.split("v=")[1];
+  let thumb = `https://img.youtube.com/vi/${id}/0.jpg`;
+  let embed = `https://www.youtube.com/embed/${id}`;
 
   await addDoc(collection(db, "videos"), {
-    titulo: titulo,
+    titulo,
     url: embed,
-    dono: usuarioLogado
+    thumb,
+    dono: usuario
   });
 
-  alert("Vídeo postado!");
   carregarVideos();
 }
+
 // 📺 CARREGAR VÍDEOS
 async function carregarVideos(){
   let lista = document.getElementById("videos");
@@ -169,13 +198,8 @@ async function carregarVideos(){
     let v = doc.data();
 
     lista.innerHTML += `
-      <div class="video">
-       lista.innerHTML += `
-  <div class="video" onclick="abrirVideo('${doc.id}')">
-   <iframe src="${v.url}" width="300"></iframe>
-    <p>${v.titulo}</p>
-  </div>
-`;
+      <div class="video" onclick="abrirVideo('${doc.id}')">
+        <img class="thumb" src="${v.thumb}">
         <p>${v.titulo}</p>
         <p>👤 ${v.dono}</p>
       </div>
@@ -183,12 +207,9 @@ async function carregarVideos(){
   });
 }
 
-// 👤 MEU CANAL
-window.verCanal = async () => {
-  if(!usuarioLogado){
-    alert("Faça login!");
-    return;
-  }
+// 🔍 PESQUISA REAL
+document.getElementById("pesquisa").addEventListener("input", async (e) => {
+  let termo = e.target.value.toLowerCase();
 
   let lista = document.getElementById("videos");
   lista.innerHTML = "";
@@ -198,56 +219,25 @@ window.verCanal = async () => {
   query.forEach(doc => {
     let v = doc.data();
 
-    if(v.dono === usuarioLogado){
+    if(v.titulo.toLowerCase().includes(termo)){
       lista.innerHTML += `
-        <div class="video">
-          <video src="${v.url}" width="300" controls></video>
+        <div class="video" onclick="abrirVideo('${doc.id}')">
+          <img class="thumb" src="${v.thumb}">
           <p>${v.titulo}</p>
         </div>
-      `;
-    }
+      
+    }sSX
   });
+});
+
+// ▶ ABRIR VÍDEO
+window.abrirVideo = (id) => {
+  window.location.href = "video.html?id=" + id;
 }
 
-// 🔍 PESQUISA
-window.pesquisar = async () => {
-  let termo = prompt("Pesquisar:");
-
-  let lista = document.getElementById("videos");
-  lista.innerHTML = "";
-
-  let query = await getDocs(collection(db, "videos"));
-
-  query.forEach(doc => {
-    let v = doc.data();
-
-    if(v.titulo.includes(termo)){
-      lista.innerHTML += `
-        <div class="video">
-          <video src="${v.url}" width="300" controls></video>
-          <p>${v.titulo}</p>
-        </div>
-      `;
-    }
-  });
-}
-
-// 🚀 INICIAR
 carregarVideos();
-  // 🔄 manter login mesmo recarregando
-window.onload = () => {
-  let user = localStorage.getItem("user");
-  if(user){
-    usuarioLogado = user;
-    console.log("Logado automaticamente:", user);
-  }
-}
 
 </script>
 
 </body>
 </html>
-function abrirVideo(id){
-  window.location.href = "video.html?id=" + id;
-}
-
