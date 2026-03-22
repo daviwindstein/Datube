@@ -123,13 +123,10 @@ window.fazerLogin = async () => {
   alert("Erro login!");
 }
 <script>
-// ======= USUÁRIO LOGADO =======
-let usuario = localStorage.getItem("user") || "Visitante";
-
-// ======= FUNÇÃO PARA POSTAR VÍDEO DO PC =======
+// POSTAR VÍDEO DO PC
 window.uploadVideo = () => {
-  if(!usuario || usuario==="Visitante"){
-    alert("Faça login para postar!");
+  if(!usuario){
+    alert("Faça login!");
     return;
   }
 
@@ -140,71 +137,54 @@ window.uploadVideo = () => {
 
   input.onchange = () => {
     let file = input.files[0];
-    if(!file){ alert("Nenhum vídeo escolhido"); return; }
+
+    if(!file){
+      alert("Nenhum vídeo escolhido");
+      return;
+    }
 
     let titulo = prompt("Título do vídeo:");
-    if(!titulo) titulo = "Sem título";
 
     let reader = new FileReader();
+
     reader.onload = () => {
-      let url = reader.result; // Vídeo em base64
+      let url = reader.result; // vídeo em base64
+
+      // pegar vídeos existentes ou criar lista
       let videos = JSON.parse(localStorage.getItem("videos")) || [];
-      videos.push({titulo: titulo, url: url, dono: usuario});
+
+      videos.push({
+        titulo: titulo,
+        url: url,
+        dono: usuario
+      });
+
       localStorage.setItem("videos", JSON.stringify(videos));
-      carregarVideos();
-      alert("Vídeo postado com sucesso!");
+
+      alert("Vídeo postado!");
+      carregarVideosLocal();
     }
+
     reader.readAsDataURL(file);
   }
 }
-
-// ======= FUNÇÃO PARA CARREGAR VÍDEOS =======
-function carregarVideos(){
-  const lista = document.getElementById("videos");
+  // CARREGAR VÍDEOS LOCAIS
+function carregarVideosLocal(){
+  let lista = document.getElementById("videos");
   lista.innerHTML = "";
+
   let videos = JSON.parse(localStorage.getItem("videos")) || [];
 
   videos.forEach((v, i) => {
     lista.innerHTML += `
-      <div class="video" onclick="abrirVideo(${i})" style="cursor:pointer;">
+      <div class="video" onclick="abrirVideoLocal(${i})">
         <video src="${v.url}" width="300" controls></video>
-        <p><b>${v.titulo}</b></p>
+        <p>${v.titulo}</p>
         <p>${v.dono}</p>
       </div>
     `;
   });
 }
-
-// ======= PESQUISA =======
-document.getElementById("pesquisa").addEventListener("input", (e)=>{
-  const termo = e.target.value.toLowerCase();
-  const lista = document.getElementById("videos");
-  lista.innerHTML = "";
-  let videos = JSON.parse(localStorage.getItem("videos")) || [];
-
-  videos.forEach((v, i) => {
-    if(v.titulo.toLowerCase().includes(termo)){
-      lista.innerHTML += `
-        <div class="video" onclick="abrirVideo(${i})" style="cursor:pointer;">
-          <video src="${v.url}" width="300" controls></video>
-          <p><b>${v.titulo}</b></p>
-          <p>${v.dono}</p>
-        </div>
-      `;
-    }
-  });
-});
-
-// ======= ABRIR VÍDEO NA PÁGINA video.html =======
-window.abrirVideo = (id) => {
-  localStorage.setItem("videoAtual", id);
-  window.location.href = "video.html";
-}
-
-// ======= CARREGAR VÍDEOS AO ABRIR PÁGINA =======
-carregarVideos();
-</script>
-
 
 </body>
 </html>
