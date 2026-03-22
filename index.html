@@ -84,7 +84,7 @@ window.fazerLogin = () => {
   } else alert("Erro no login!");
 };
 
-// UPLOAD VÍDEO
+// UPLOAD VÍDEO COM LOGICA DE ATUALIZAR IMEDIATAMENTE
 window.uploadVideo = () => {
   if(!usuario){ alert("Faça login!"); return; }
 
@@ -103,7 +103,7 @@ window.uploadVideo = () => {
     reader.onload = ()=>{
       let dono = users.find(u=>u.username===usuario);
 
-      videos.push({
+      let novoVideo = {
         titulo,
         url: reader.result,
         dono: usuario,
@@ -114,16 +114,25 @@ window.uploadVideo = () => {
         comentarios:[],
         views:0,
         data: Date.now()
-      });
+      };
 
+      // adiciona no início do array (mais recente primeiro)
+      videos.unshift(novoVideo);
+
+      // salva
       localStorage.setItem("videos",JSON.stringify(videos));
+
+      // atualiza página inicial imediatamente
       carregarTodosVideos();
+
+      // foca no vídeo recém postado
+      alert(`Vídeo "${titulo}" postado!`);
     };
     reader.readAsDataURL(file);
   }
 };
 
-// FUNÇÃO PARA CARREGAR TODOS OS VÍDEOS
+// FUNÇÃO PARA CARREGAR TODOS OS VÍDEOS (recentes + popular + lista)
 function carregarTodosVideos(term=""){
   let lista = document.getElementById("videos");
   let recent = document.getElementById("recent");
@@ -133,13 +142,13 @@ function carregarTodosVideos(term=""){
   recent.innerHTML = "";
   popular.innerHTML = "";
 
-  // FILTRAR por pesquisa
+  // FILTRA por pesquisa
   let filtered = videos.filter(v=>v.titulo.toLowerCase().includes(term.toLowerCase()));
 
   if(filtered.length==0) return lista.innerHTML="<p>Nenhum vídeo encontrado.</p>";
 
   // Vídeo mais recente
-  let latest = filtered.reduce((a,b)=>a.data>b.data?a:b);
+  let latest = filtered[0]; // sempre primeiro do array
   recent.innerHTML = `
     <div class="video highlight" onclick="abrirVideo(${videos.indexOf(latest)})">
       <video src="${latest.url}" muted></video>
@@ -157,7 +166,7 @@ function carregarTodosVideos(term=""){
   `;
 
   // Todos os vídeos
-  filtered.forEach((v,i)=>{
+  filtered.forEach(v=>{
     lista.innerHTML += `
       <div class="video" onclick="abrirVideo(${videos.indexOf(v)})">
         <video src="${v.url}" muted></video>
