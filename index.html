@@ -134,7 +134,9 @@ let rt = new FileReader();
 rv.onload=()=>{
 rt.onload=()=>{
 
-let videos = getVideos();
+function getVideos(){
+return JSON.parse(localStorage.getItem("videos")) || [];
+}
 
 videos.unshift({
 titulo,
