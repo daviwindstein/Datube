@@ -2,39 +2,30 @@
 <html>
 <body style="background:#0f0f0f;color:white;font-family:Arial;">
 
-<!-- BANNER -->
-<div style="height:150px;background:#333"></div>
-
 <h1 id="nome"></h1>
 
 <div id="videos"></div>
 
+<script src="app.js"></script>
+
 <script>
 
-let usuario = localStorage.getItem("user") || "Você";
-let listaVideos = JSON.parse(localStorage.getItem("videos")) || [];
+let user = localStorage.getItem("user");
 
-document.getElementById("nome").innerText = usuario;
+document.getElementById("nome").innerText = user;
 
 let lista = document.getElementById("videos");
 
-listaVideos.forEach((v,i)=>{
-if(v.dono === usuario){
-
+videos.forEach((v,i)=>{
+if(v.dono === user){
 lista.innerHTML+=`
 <div onclick="abrirVideo(${i})">
 <img src="${v.thumb}" width="200">
 <p>${v.titulo}</p>
 </div>
 `;
-
 }
 });
-
-function abrirVideo(id){
-localStorage.setItem("videoAtual", id);
-window.location.href="video.html";
-}
 
 </script>
 
