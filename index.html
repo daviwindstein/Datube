@@ -4,161 +4,260 @@
 <meta charset="UTF-8">
 <title>Datuber</title>
 
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-
 <style>
 body{margin:0;background:#0f0f0f;color:white;font-family:Arial;}
-header{display:flex;justify-content:space-between;padding:10px;background:#202020;}
-#videos{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;padding:10px;}
-.video{background:#1c1c1c;padding:5px;border-radius:10px;cursor:pointer;}
-img{width:100%;}
-.menu{position:absolute;right:10px;top:50px;background:#202020;display:none;padding:10px;}
-button{background:red;color:white;border:none;padding:5px;}
+
+header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+padding:10px;
+background:#202020;
+}
+
+#videos{
+display:grid;
+grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
+gap:10px;
+padding:10px;
+}
+
+.video{
+background:#1c1c1c;
+padding:5px;
+border-radius:10px;
+cursor:pointer;
+}
+
+video{width:100%;}
+
+button{background:red;color:white;border:none;padding:5px;margin:2px;cursor:pointer;}
+
+.perfil{
+width:40px;
+height:40px;
+border-radius:50%;
+cursor:pointer;
+}
+
+.menu{
+position:absolute;
+right:10px;
+top:60px;
+background:#202020;
+padding:10px;
+display:none;
+}
+
 </style>
 </head>
 
 <body>
 
 <header>
+
 <h2>📺 Datuber</h2>
 
 <input id="pesquisa" placeholder="Pesquisar">
 
 <div>
-<button onclick="abrirCriar()">➕ Criar</button>
-<button onclick="toggleMenu()">👤</button>
+<button onclick="abrirUpload()">📤</button>
+<button onclick="iniciarLive()">🔴</button>
+
+<!-- FOTO DO CANAL -->
+<img id="fotoPerfil" class="perfil" onclick="abrirMenu()">
 </div>
+
 </header>
 
+<!-- MENU DO PERFIL -->
 <div id="menu" class="menu">
 <p onclick="login()">Login</p>
+<p onclick="mudarFoto()">Mudar foto</p>
 <p onclick="irCanal()">Meu canal</p>
-<p onclick="abrirStudio()">Studio</p>
 <p onclick="logout()">Sair</p>
 </div>
 
-<div id="criarBox" style="display:none;padding:10px;">
+<!-- UPLOAD -->
+<div id="uploadBox" style="display:none;padding:10px;">
 <input type="file" id="videoFile" accept="video/*"><br><br>
-<input type="file" id="thumbFile" accept="image/*"><br><br>
 <input id="titulo" placeholder="Título"><br><br>
-<textarea id="desc" placeholder="Descrição"></textarea><br><br>
-<button onclick="postarVideo()">Postar</button>
+<button onclick="postarVideo()">POSTAR</button>
 </div>
 
 <div id="videos"></div>
 
 <script>
-const supabase = window.supabase.createClient("SUA_URL","SUA_KEY");
-let usuario = localStorage.getItem("user");
+
+// 👤 USUÁRIO
+let usuario = localStorage.getItem("user") || "Convidado";
+let foto = localStorage.getItem("foto") || "https://via.placeholder.com/40";
+
+// SET FOTO
+document.getElementById("fotoPerfil").src = foto;
 
 // MENU
-function toggleMenu(){
-let m=document.getElementById("menu");
-m.style.display=m.style.display=="block"?"none":"block";
+window.abrirMenu = () => {
+let m = document.getElementById("menu");
+m.style.display = m.style.display=="block"?"none":"block";
 }
 
 // LOGIN
-function login(){
-let nome=prompt("Nome:");
-localStorage.setItem("user",nome);
-usuario=nome;
-alert("Logado!");
-}
-
-// LOGOUT
-function logout(){
-localStorage.removeItem("user");
+window.login = () => {
+let nome = prompt("Nome:");
+localStorage.setItem("user", nome);
 location.reload();
 }
 
-// CANAL
-function irCanal(){
-location.href="canal.html?user="+usuario;
+// LOGOUT
+window.logout = () => {
+localStorage.removeItem("user");
+alert("Saiu!");
+location.reload();
 }
 
-// STUDIO
-function abrirStudio(){
-location.href="studio.html";
+// MUDAR FOTO
+window.mudarFoto = () => {
+let input = document.createElement("input");
+input.type="file";
+input.accept="image/*";
+
+input.onchange = () => {
+let reader = new FileReader();
+
+reader.onload = () => {
+localStorage.setItem("foto", reader.result);
+location.reload();
 }
 
-// CRIAR
-function abrirCriar(){
-document.getElementById("criarBox").style.display="block";
+reader.readAsDataURL(input.files[0]);
+}
+
+input.click();
+}
+
+// IR CANAL
+window.irCanal = () => {
+alert("Aqui vai ser seu canal (posso fazer completo depois)");
+}
+
+// 🔥 BANCO
+let videos = JSON.parse(localStorage.getItem("videos")) || [];
+
+// UPLOAD
+window.abrirUpload = () => {
+document.getElementById("uploadBox").style.display="block";
 }
 
 // POSTAR
-async function postarVideo(){
-let video=videoFile.files[0];
-let thumb=thumbFile.files[0];
+window.postarVideo = () => {
 
-if(!video||!thumb){alert("Escolhe tudo");return;}
+let file = videoFile.files[0];
+let titulo = document.getElementById("titulo").value;
 
-let vName=Date.now()+video.name;
-let tName=Date.now()+thumb.name;
+if(!file || !titulo){
+alert("Preencha tudo!");
+return;
+}
 
-await supabase.storage.from("videos").upload(vName,video);
-await supabase.storage.from("thumbs").upload(tName,thumb);
+let reader = new FileReader();
 
-let vURL=supabase.storage.from("videos").getPublicUrl(vName).data.publicUrl;
-let tURL=supabase.storage.from("thumbs").getPublicUrl(tName).data.publicUrl;
+reader.onload = () => {
 
-await supabase.from("videos").insert([{
-titulo:titulo.value,
-descricao:desc.value,
-url:vURL,
-thumb:tURL,
-dono:usuario,
+videos.unshift({
+titulo,
+url: reader.result,
+dono: usuario,
 views:0,
-likes:0
-}]);
+likes:0,
+comentarios:[]
+});
 
-// 🔔 NOTIFICAÇÃO
-await supabase.from("notificacoes").insert([{texto:usuario+" postou vídeo!"}]);
+localStorage.setItem("videos", JSON.stringify(videos));
 
 alert("Postado!");
 carregarVideos();
 }
 
+reader.readAsDataURL(file);
+}
+
 // CARREGAR
-async function carregarVideos(){
-let {data}=await supabase.from("videos").select("*");
+function carregarVideos(){
 
-videos.innerHTML="";
+let lista = document.getElementById("videos");
+lista.innerHTML="";
 
-data.sort((a,b)=>(b.views+b.likes*2)-(a.views+a.likes*2));
+videos.forEach((v,i)=>{
 
-data.forEach(v=>{
-videos.innerHTML+=`
-<div class="video" onclick="abrirVideo('${v.id}')">
-<img src="${v.thumb}">
+lista.innerHTML+=`
+<div class="video" onclick="abrirVideo(${i})">
+<video src="${v.url}"></video>
 <p>${v.titulo}</p>
-<p>${v.views} views</p>
-</div>`;
+<p>${v.dono}</p>
+<p>👁️ ${v.views} ❤️ ${v.likes}</p>
+</div>
+`;
+
 });
 }
 
 // PESQUISA
-pesquisa.oninput=async(e)=>{
-let t=e.target.value.toLowerCase();
-let {data}=await supabase.from("videos").select("*");
+pesquisa.oninput = (e)=>{
+let termo = e.target.value.toLowerCase();
 
-videos.innerHTML="";
-data.forEach(v=>{
-if(v.titulo.toLowerCase().includes(t)){
-videos.innerHTML+=`
-<div class="video" onclick="abrirVideo('${v.id}')">
-<img src="${v.thumb}">
+let lista = document.getElementById("videos");
+lista.innerHTML="";
+
+videos.forEach((v,i)=>{
+if(v.titulo.toLowerCase().includes(termo)){
+lista.innerHTML+=`
+<div class="video" onclick="abrirVideo(${i})">
+<video src="${v.url}"></video>
 <p>${v.titulo}</p>
 </div>`;
 }
 });
 }
 
-function abrirVideo(id){
-location.href="video.html?id="+id;
+// ABRIR VÍDEO
+window.abrirVideo = (id)=>{
+localStorage.setItem("videoAtual", id);
+window.location.href="video.html";
+}
+
+// 🔴 LIVE
+window.iniciarLive = async () => {
+
+let stream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
+
+let nova = window.open("");
+
+nova.document.write(`
+<h2>🔴 AO VIVO</h2>
+<video autoplay id="live"></video>
+
+<input id="msg">
+<button onclick="enviar()">Enviar</button>
+
+<div id="chat"></div>
+
+<script>
+let video = document.getElementById("live");
+video.srcObject = opener.streamRef;
+
+function enviar(){
+let m = document.getElementById("msg").value;
+document.getElementById("chat").innerHTML += "<p>"+m+"</p>";
+}
+<\/script>
+`);
+
+window.streamRef = stream;
 }
 
 carregarVideos();
+
 </script>
 
 </body>
