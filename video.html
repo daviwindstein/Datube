@@ -147,6 +147,11 @@ async function like(){
     likes: data.likes + 1
   }).eq("id",id);
 }
+  <video id="player" controls width="100%"></video>
+
+<h2 id="titulo"></h2>
+
+<button onclick="like()">👍 Like</button>
 
 carregar();
 </script>
