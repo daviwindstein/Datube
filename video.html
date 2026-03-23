@@ -1,54 +1,24 @@
 <!DOCTYPE html>
 <html>
-<body style="background:#0f0f0f;color:white;font-family:Arial;">
+<body style="background:#111;color:white;">
 
 <video id="player" controls width="100%"></video>
 
 <h2 id="titulo"></h2>
-<p id="dono"></p>
-
-<button onclick="like()">👍 Like</button>
-
-<h3>Comentários</h3>
-<button onclick="comentar()">Comentar</button>
-<div id="comentarios"></div>
 
 <script>
 
 let videos = JSON.parse(localStorage.getItem("videos")) || [];
 let id = localStorage.getItem("videoAtual");
 
+if(!videos[id]){
+alert("Vídeo não encontrado");
+}
+
 let v = videos[id];
 
-player.src = v.video;
-titulo.innerText = v.titulo;
-dono.innerText = v.dono;
-
-// VIEW
-v.views++;
-localStorage.setItem("videos", JSON.stringify(videos));
-
-function like(){
-v.likes++;
-localStorage.setItem("videos", JSON.stringify(videos));
-alert("Like!");
-}
-
-function comentar(){
-let texto = prompt("Comentário:");
-v.comentarios.push(texto);
-localStorage.setItem("videos", JSON.stringify(videos));
-mostrar();
-}
-
-function mostrar(){
-comentarios.innerHTML="";
-v.comentarios.forEach(c=>{
-comentarios.innerHTML += "<p>"+c+"</p>";
-});
-}
-
-mostrar();
+document.getElementById("player").src = v.video;
+document.getElementById("titulo").innerText = v.titulo;
 
 </script>
 
