@@ -5,44 +5,89 @@
 <title>Datuber</title>
 </head>
 
-<body style="background:#0f0f0f;color:white;font-family:Arial;">
+<body style="background:#111;color:white;font-family:Arial;">
 
-<header style="display:flex;justify-content:space-between;background:#202020;padding:10px;">
-
-<h2>📺 Datuber</h2>
-
-<div>
-
-<button onclick="verNoti()">🔔</button>
-<button onclick="irStudio()">📊</button>
-<button onclick="irCanal()">📺</button>
-
-<button onclick="mudarIdioma()">🌐</button>
-
-<button onclick="login()">👤</button>
-
-</div>
-
-</header>
-
-<div style="padding:10px;">
+<h1>📺 Datuber</h1>
 
 <input id="titulo" placeholder="Título"><br><br>
-<input type="file" id="videoFile"><br><br>
-<input type="file" id="thumbFile"><br><br>
+<input type="file" id="videoFile" accept="video/*"><br><br>
+<input type="file" id="thumbFile" accept="image/*"><br><br>
 
-<button onclick="postarVideo()">POSTAR</button>
+<button onclick="postar()">POSTAR</button>
 
-</div>
-
-<h2>📜 Vídeos</h2>
+<h2>Vídeos</h2>
 <div id="videos"></div>
 
-<script src="app.js"></script>
-
 <script>
-carregarHome();
+
+// 🔥 BANCO
+let videos = JSON.parse(localStorage.getItem("videos")) || [];
+
+// 🚀 POSTAR
+function postar(){
+
+let video = document.getElementById("videoFile").files[0];
+let thumb = document.getElementById("thumbFile").files[0];
+let titulo = document.getElementById("titulo").value;
+
+if(!video || !thumb || !titulo){
+alert("Preencha tudo!");
+return;
+}
+
+let rv = new FileReader();
+let rt = new FileReader();
+
+rv.onload = () => {
+rt.onload = () => {
+
+videos.unshift({
+titulo: titulo,
+video: rv.result,
+thumb: rt.result
+});
+
+localStorage.setItem("videos", JSON.stringify(videos));
+
+alert("Postado!");
+carregar();
+
+}
+rt.readAsDataURL(thumb);
+}
+rv.readAsDataURL(video);
+}
+
+// 📺 CARREGAR
+function carregar(){
+
+let lista = document.getElementById("videos");
+lista.innerHTML = "";
+
+videos = JSON.parse(localStorage.getItem("videos")) || [];
+
+videos.forEach((v,i)=>{
+
+lista.innerHTML += `
+<div onclick="abrir(${i})" style="cursor:pointer;">
+<img src="${v.thumb}" width="200">
+<p>${v.titulo}</p>
+</div>
+`;
+
+});
+}
+
+// ▶️ ABRIR
+function abrir(i){
+localStorage.setItem("videoAtual", i);
+window.location.href = "video.html";
+}
+
+carregar();
+
 </script>
 
 </body>
+</html>
 </html>
