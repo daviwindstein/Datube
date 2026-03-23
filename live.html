@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<body style="background:black;">
+
+<video id="tela" autoplay style="width:100%"></video>
+<video id="face" autoplay muted style="width:150px;position:fixed;top:10px;right:10px;border-radius:10px;"></video>
+
+<script>
+
+navigator.mediaDevices.getDisplayMedia({video:true,audio:true})
+.then(stream=>{
+tela.srcObject = stream;
+});
+
+navigator.mediaDevices.getUserMedia({video:true,audio:true})
+.then(stream=>{
+face.srcObject = stream;
+});
+
+</script>
+
+</body>
+</html>
