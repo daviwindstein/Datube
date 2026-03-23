@@ -9,6 +9,35 @@ video{width:100%;max-height:500px;}
 #comentarios{margin-top:10px;}
 </style>
 </head>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<script>
+const supabase = window.supabase.createClient("SUA_URL","SUA_KEY");
+
+let id = new URLSearchParams(location.search).get("id");
+
+async function carregar(){
+  let { data } = await supabase.from("videos").select("*").eq("id",id).single();
+
+  document.getElementById("player").src = data.url;
+  document.getElementById("titulo").innerText = data.titulo;
+
+  // 👁️ VIEW AUTOMÁTICO
+  await supabase.from("videos").update({
+    views: data.views + 1
+  }).eq("id",id);
+}
+
+async function like(){
+  let { data } = await supabase.from("videos").select("likes").eq("id",id).single();
+
+  await supabase.from("videos").update({
+    likes: data.likes + 1
+  }).eq("id",id);
+}
+
+carregar();
+</script>
 <body>
 
 <h2 id="titulo"></h2>
@@ -91,6 +120,35 @@ function inscrever(){
   if(!usuario) return alert("Faça login!");
   alert("Inscrito no canal de "+document.getElementById("canal").innerText+" ✅");
 }
+</script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
+<script>
+const supabase = window.supabase.createClient("SUA_URL","SUA_KEY");
+
+let id = new URLSearchParams(location.search).get("id");
+
+async function carregar(){
+  let { data } = await supabase.from("videos").select("*").eq("id",id).single();
+
+  document.getElementById("player").src = data.url;
+  document.getElementById("titulo").innerText = data.titulo;
+
+  // 👁️ VIEW AUTOMÁTICO
+  await supabase.from("videos").update({
+    views: data.views + 1
+  }).eq("id",id);
+}
+
+async function like(){
+  let { data } = await supabase.from("videos").select("likes").eq("id",id).single();
+
+  await supabase.from("videos").update({
+    likes: data.likes + 1
+  }).eq("id",id);
+}
+
+carregar();
 </script>
 </body>
 </html>
