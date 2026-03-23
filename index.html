@@ -16,7 +16,6 @@
 
 <div style="display:flex;gap:10px;align-items:center;">
 <button onclick="abrirCriar()">➕</button>
-<button onclick="mudarIdioma()">🌐</button>
 <img id="fotoPerfil" onclick="abrirMenu()" style="width:40px;height:40px;border-radius:50%;cursor:pointer;">
 </div>
 
@@ -25,24 +24,12 @@
 <!-- MENU PERFIL -->
 <div id="menuPerfil" style="display:none;position:absolute;right:10px;background:#222;padding:10px;">
 <p onclick="login()">Login</p>
-<p onclick="mudarFoto()">Foto</p>
-<p onclick="irCanal()">Canal</p>
-<p onclick="irStudio()">Studio</p>
 </div>
 
 <!-- MENU CRIAR -->
 <div id="menuCriar" style="display:none;background:#222;padding:10px;">
-<button onclick="criarVideo()">🎥 Postar Vídeo</button>
+<button onclick="criarVideo()">🎥 Vídeo</button>
 <button onclick="criarShort()">🎬 Shorts</button>
-<button onclick="abrirLive()">🔴 Live</button>
-<button onclick="criarPost()">📝 Postagem</button>
-</div>
-
-<!-- MENU LATERAL -->
-<div style="position:fixed;left:0;top:50%;transform:translateY(-50%);">
-<button onclick="home()">🏠</button><br>
-<button onclick="irShorts()">🎬</button><br>
-<button onclick="abrirLive()">🔴</button>
 </div>
 
 <hr>
@@ -51,10 +38,9 @@
 
 <script>
 
-// USER
+// 👤 USER
 let user = localStorage.getItem("user") || "Você";
-let foto = localStorage.getItem("foto") || "https://via.placeholder.com/40";
-document.getElementById("fotoPerfil").src = foto;
+document.getElementById("fotoPerfil").src = "https://via.placeholder.com/40";
 
 // MENU
 function abrirMenu(){
@@ -71,198 +57,149 @@ localStorage.setItem("user", n);
 location.reload();
 }
 
-// FOTO
-function mudarFoto(){
-let i = document.createElement("input");
-i.type="file";
-i.onchange=()=>{
-let r=new FileReader();
-r.onload=()=>{
-localStorage.setItem("foto",r.result);
-location.reload();
-}
-r.readAsDataURL(i.files[0]);
-}
-i.click();
-}
-
-// IDIOMA
-function mudarIdioma(){
-let l = localStorage.getItem("lang")||"pt";
-l = l=="pt"?"en":l=="en"?"es":"pt";
-localStorage.setItem("lang",l);
-alert("Idioma: "+l);
-}
-
-// NAV
-function irCanal(){ location="canal.html"; }
-function irStudio(){ location="studio.html"; }
-function abrirLive(){ location="live.html"; }
-function irShorts(){ location="shorts.html"; }
-function home(){ location.reload(); }
-
 // BASE
-let videos = JSON.parse(localStorage.getItem("videos"))||[];
-let shorts = JSON.parse(localStorage.getItem("shorts"))||[];
-let posts = JSON.parse(localStorage.getItem("posts"))||[];
+let videos = JSON.parse(localStorage.getItem("videos")) || [];
+let shorts = JSON.parse(localStorage.getItem("shorts")) || [];
 
-// 🎥 VIDEO COMPLETO
+// 🔥 VIDEO (USANDO SCRIPT QUE FUNCIONA)
 function criarVideo(){
 
-let v = document.createElement("input");
-v.type="file"; v.accept="video/*";
+let inputVideo = document.createElement("input");
+inputVideo.type = "file";
+inputVideo.accept = "video/*";
 
-let t = document.createElement("input");
-t.type="file"; t.accept="image/*";
+let inputThumb = document.createElement("input");
+inputThumb.type = "file";
+inputThumb.accept = "image/*";
 
-v.click();
+inputVideo.click();
 
-v.onchange=()=>{
-if(!v.files[0]) return;
+inputVideo.onchange = () => {
 
-t.click();
+if(!inputVideo.files[0]) return;
 
-t.onchange=()=>{
+inputThumb.click();
+
+inputThumb.onchange = () => {
 
 let titulo = prompt("Título:");
 let desc = prompt("Descrição:");
 
-let rv = new FileReader();
-let rt = new FileReader();
+let readerVideo = new FileReader();
+let readerThumb = new FileReader();
 
-rv.onload=()=>{
-rt.onload=()=>{
+readerVideo.onload = () => {
+readerThumb.onload = () => {
 
-videos.unshift({
-tipo:"video",
+let novoVideo = {
 titulo,
 desc,
-video:rv.result,
-thumb:rt.result,
-dono:user
-});
+video: readerVideo.result,
+thumb: readerThumb.result,
+likes: 0,
+comentarios: []
+};
 
-localStorage.setItem("videos",JSON.stringify(videos));
+videos.unshift(novoVideo);
+
+// SALVAR CERTO
+localStorage.setItem("videos", JSON.stringify(videos));
+
+// 🔥 ATUALIZA NA HORA
+carregarVideos();
 
 alert("Vídeo postado!");
-carregar();
 
 }
 
-rt.readAsDataURL(t.files[0]);
+readerThumb.readAsDataURL(inputThumb.files[0]);
 }
 
-rv.readAsDataURL(v.files[0]);
+readerVideo.readAsDataURL(inputVideo.files[0]);
 
 }
 
 }
-}
 
-// 🎬 SHORTS COMPLETO
+// 🎬 SHORTS
 function criarShort(){
 
-let v=document.createElement("input");
-v.type="file"; v.accept="video/*";
+let input = document.createElement("input");
+input.type="file";
+input.accept="video/*";
 
-let t=document.createElement("input");
-t.type="file"; t.accept="image/*";
+input.click();
 
-v.click();
+input.onchange=()=>{
 
-v.onchange=()=>{
+let r=new FileReader();
 
-if(!v.files[0]) return;
-
-t.click();
-
-t.onchange=()=>{
-
-let titulo = prompt("Título do short:");
-let desc = prompt("Descrição:");
-
-let rv=new FileReader();
-let rt=new FileReader();
-
-rv.onload=()=>{
-rt.onload=()=>{
-
-shorts.unshift({
-titulo,
-desc,
-video:rv.result,
-thumb:rt.result
-});
-
+r.onload=()=>{
+shorts.unshift({video:r.result});
 localStorage.setItem("shorts",JSON.stringify(shorts));
 alert("Short postado!");
-
 }
 
-rt.readAsDataURL(t.files[0]);
-}
-rv.readAsDataURL(v.files[0]);
+r.readAsDataURL(input.files[0]);
 
 }
 
 }
-}
 
-// 📝 POST
-function criarPost(){
-let texto = prompt("Escreva algo:");
-posts.unshift({texto});
-localStorage.setItem("posts",JSON.stringify(posts));
-carregar();
-}
+// 🔥 CARREGAR (CORRIGIDO REAL)
+function carregarVideos(){
 
-// 🔥 FEED (AGORA FUNCIONA CERTO)
-function carregar(){
+let feed = document.getElementById("feed");
+feed.innerHTML = "";
 
-feed.innerHTML="";
+let lista = JSON.parse(localStorage.getItem("videos")) || [];
 
-if(videos.length === 0){
-feed.innerHTML = "<p>Nenhum vídeo encontrado</p>";
+if(lista.length === 0){
+feed.innerHTML = "<p>Nenhum vídeo ainda</p>";
 return;
 }
 
-videos.forEach((v,i)=>{
-feed.innerHTML+=`
-<div onclick="abrirVideo(${i})" style="margin:10px;cursor:pointer;">
-<img src="${v.thumb}" width="250">
-<p>${v.titulo}</p>
-<p>${v.dono}</p>
+lista.forEach((v, i) => {
+
+feed.innerHTML += `
+<div onclick="abrirVideo(${i})" style="cursor:pointer;margin:10px;">
+<img src="${v.thumb}" width="300">
+<h3>${v.titulo}</h3>
 </div>
 `;
+
 });
 
 }
 
-// 🔍 PESQUISA FUNCIONAL
-pesquisa.oninput=(e)=>{
-let t=e.target.value.toLowerCase();
-feed.innerHTML="";
+// 🔍 PESQUISA
+document.getElementById("pesquisa").oninput = (e) => {
 
-videos.forEach((v,i)=>{
-if(v.titulo.toLowerCase().includes(t)){
-feed.innerHTML+=`
+let termo = e.target.value.toLowerCase();
+let lista = JSON.parse(localStorage.getItem("videos")) || [];
+
+feed.innerHTML = "";
+
+lista.forEach((v,i)=>{
+if(v.titulo.toLowerCase().includes(termo)){
+feed.innerHTML += `
 <div onclick="abrirVideo(${i})">
-<img src="${v.thumb}" width="250">
+<img src="${v.thumb}" width="300">
 <p>${v.titulo}</p>
-</div>
-`;
+</div>`;
 }
 });
+
 }
 
 // ▶ ABRIR VIDEO
 function abrirVideo(i){
-localStorage.setItem("videoAtual",i);
-location="video.html";
+localStorage.setItem("videoAtual", i);
+window.location = "video.html";
 }
 
 // START
-carregar();
+carregarVideos();
 
 </script>
 
