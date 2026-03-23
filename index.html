@@ -194,17 +194,81 @@ display:none;
 border-radius:10px;
 ">
 
-<p onclick="login()">👤 Login</p>
-<p onclick="irCanal()">📺 Meu canal</p>
-<p onclick="mudarFoto()">🖼️ Mudar foto</p>
-<p onclick="mudarNome()">✏️ Mudar nome</p>
-<p onclick="mudarIdioma()">🌐 Idioma</p>
-<p onclick="logout()">🚪 Sair</p>
+
+  // ABRIR MENU
+window.toggleMenu = () => {
+let m = document.getElementById("menuPerfil");
+m.style.display = m.style.display=="block"?"none":"block";
+}
+
+// LOGIN
+window.login = () => {
+let nome = prompt("Digite seu nome:");
+localStorage.setItem("user", nome);
+alert("Logado!");
+location.reload();
+}
+
+// LOGOUT
+window.logout = () => {
+localStorage.removeItem("user");
+alert("Saiu!");
+location.reload();
+}
+
+// CANAL
+window.irCanal = () => {
+window.location.href = "canal.html";
+}
+
+// MUDAR FOTO
+window.mudarFoto = () => {
+let input = document.createElement("input");
+input.type="file";
+input.accept="image/*";
+
+input.onchange = () => {
+let reader = new FileReader();
+
+reader.onload = () => {
+localStorage.setItem("foto", reader.result);
+location.reload();
+}
+
+reader.readAsDataURL(input.files[0]);
+}
+
+input.click();
+}
+
+// MUDAR NOME
+window.mudarNome = () => {
+let nome = prompt("Novo nome:");
+localStorage.setItem("user", nome);
+location.reload();
+}
+
+// 🌐 IDIOMA (simples)
+window.mudarIdioma = () => {
+alert("Idioma em breve 😎");
+}
+
+// SETAR FOTO SALVA
+let fotoSalva = localStorage.getItem("foto");
+if(fotoSalva){
+document.getElementById("fotoPerfil").src = fotoSalva;
+}
 
 </div>
 
 
 </script>
 
+<p onclick="login()">👤 Login</p>
+<p onclick="irCanal()">📺 Meu canal</p>
+<p onclick="mudarFoto()">🖼️ Mudar foto</p>
+<p onclick="mudarNome()">✏️ Mudar nome</p>
+<p onclick="mudarIdioma()">🌐 Idioma</p>
+<p onclick="logout()">🚪 Sair</p>
 </body>
 </html>
