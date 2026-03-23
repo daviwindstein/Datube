@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Datuber Studio</title>
+
+<style>
+body{background:#0f0f0f;color:white;font-family:Arial;margin:0;}
+
+header{
+background:#202020;
+padding:10px;
+display:flex;
+justify-content:space-between;
+}
+
+#painel{
+padding:10px;
+display:flex;
+gap:20px;
+}
+
+.card{
+background:#1c1c1c;
+padding:10px;
+border-radius:10px;
+}
+
+#videos{
+padding:10px;
+}
+
+.video{
+background:#1c1c1c;
+margin:10px 0;
+padding:10px;
+border-radius:10px;
+}
+
+button{
+background:red;
+color:white;
+border:none;
+padding:5px;
+margin:2px;
+cursor:pointer;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h2>📊 Datuber Studio</h2>
+<button onclick="voltar()">⬅ Voltar</button>
+</header>
+
+<!-- 📊 PAINEL -->
+<div id="painel">
+<div class="card">
+<p>👁️ Views</p>
+<h2 id="views"></h2>
+</div>
+
+<div class="card">
+<p>🎥 Vídeos</p>
+<h2 id="qtd"></h2>
+</div>
+
+<div class="card">
+<p>❤️ Likes</p>
+<h2 id="likes"></h2>
+</div>
+</div>
+
+<!-- 🎥 LISTA -->
+<div id="videos"></div>
+
+<script>
+
+// 👤 usuário
+let usuario = localStorage.getItem("user") || "Você";
+
+// 🎥 vídeos
+let lista = JSON.parse(localStorage.getItem("videos")) || [];
+
+// 📊 contadores
+let totalViews = 0;
+let totalLikes = 0;
+let totalVideos = 0;
+
+let div = document.getElementById("videos");
+
+// 🔥 CARREGAR
+function carregar(){
+
+div.innerHTML="";
+
+lista.forEach((v,i)=>{
+
+if(v.dono === usuario){
+
+totalViews += v.views;
+totalLikes += v.likes;
+totalVideos++;
+
+div.innerHTML += `
+<div class="video">
+
+<img src="${v.thumb}" width="200">
+
+<p><b>${v.titulo}</b></p>
+
+<p>👁️ ${v.views} | ❤️ ${v.likes}</p>
+
+<button onclick="editar(${i})">✏️ Editar</button>
+<button onclick="deletar(${i})">🗑️ Deletar</button>
+
+</div>
+`;
+
+}
+});
+
+// atualizar painel
+document.getElementById("views").innerText = totalViews;
+document.getElementById("likes").innerText = totalLikes;
+document.getElementById("qtd").innerText = totalVideos;
+
+}
+
+// ✏️ EDITAR
+function editar(i){
+
+let novo = prompt("Novo título:", lista[i].titulo);
+
+if(novo){
+lista[i].titulo = novo;
+localStorage.setItem("videos", JSON.stringify(lista));
+location.reload();
+}
+
+}
+
+// 🗑️ DELETAR
+function deletar(i){
+
+if(confirm("Apagar vídeo?")){
+lista.splice(i,1);
+localStorage.setItem("videos", JSON.stringify(lista));
+location.reload();
+}
+
+}
+
+// 🔙 VOLTAR
+function voltar(){
+window.location.href = "index.html";
+}
+
+carregar();
+
+</script>
+
+</body>
+</html>
