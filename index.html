@@ -1,100 +1,159 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Datuber</title>
+
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
+<style>
+body{background:#0f0f0f;color:white;font-family:Arial;margin:0;}
+
+header{
+display:flex;
+justify-content:space-between;
+padding:10px;
+background:#202020;
+}
+
+#videos{
+display:grid;
+grid-template-columns:repeat(3,1fr);
+gap:10px;
+padding:10px;
+}
+
+.video{
+cursor:pointer;
+background:#1c1c1c;
+padding:5px;
+border-radius:10px;
+}
+
+video{width:100%;}
+button{background:red;color:white;border:none;padding:5px;}
+</style>
+</head>
+
+<body>
+
+<header>
+<h2>📺 Datuber</h2>
+
+<input id="pesquisa" placeholder="Pesquisar">
+
+<button onclick="abrirUpload()">➕ Postar</button>
+</header>
+
+<!-- UPLOAD -->
+<div id="uploadBox" style="display:none;padding:10px;">
+<input type="file" id="videoFile" accept="video/*"><br><br>
+<input type="file" id="thumbFile" accept="image/*"><br><br>
+<input id="titulo" placeholder="Título"><br><br>
+<button onclick="postarVideo()">POSTAR</button>
+</div>
+
+<div id="videos"></div>
+
 <script>
+
 const supabase = window.supabase.createClient("SUA_URL","SUA_KEY");
 
-let usuario = localStorage.getItem("user");
+function abrirUpload(){
+document.getElementById("uploadBox").style.display="block";
+}
 
-// 🔥 CARREGAR VÍDEOS COM ALGORITMO
+// 🚀 POSTAR VÍDEO
+async function postarVideo(){
+
+let video = document.getElementById("videoFile").files[0];
+let thumb = document.getElementById("thumbFile").files[0];
+let titulo = document.getElementById("titulo").value;
+
+if(!video || !thumb || !titulo){
+alert("Preencha tudo!");
+return;
+}
+
+let nomeVideo = Date.now()+video.name;
+let nomeThumb = Date.now()+thumb.name;
+
+// upload
+await supabase.storage.from("videos").upload(nomeVideo, video);
+await supabase.storage.from("thumbs").upload(nomeThumb, thumb);
+
+// pegar link
+let videoURL = supabase.storage.from("videos").getPublicUrl(nomeVideo).data.publicUrl;
+let thumbURL = supabase.storage.from("thumbs").getPublicUrl(nomeThumb).data.publicUrl;
+
+// salvar banco
+await supabase.from("videos").insert([{
+titulo:titulo,
+url:videoURL,
+thumb:thumbURL,
+views:0,
+likes:0
+}]);
+
+alert("Postado!");
+carregarVideos();
+}
+
+// 📺 CARREGAR VÍDEOS
 async function carregarVideos(){
-  let { data } = await supabase.from("videos").select("*");
 
-  // 🔥 ALGORITMO (views + likes)
-  data.sort((a,b)=>{
-    let scoreA = a.views + a.likes*2;
-    let scoreB = b.views + b.likes*2;
-    return scoreB - scoreA;
-  });
+let { data } = await supabase.from("videos").select("*");
 
-  let lista = document.getElementById("videos");
-  lista.innerHTML="";
+let lista = document.getElementById("videos");
+lista.innerHTML="";
 
-  data.forEach(v=>{
-    lista.innerHTML += `
-      <div onclick="abrirVideo('${v.id}')">
-        <img src="${v.thumb}" width="100%">
-        <p>${v.titulo}</p>
-        <p>${v.views} views</p>
-      </div>
-    `;
-  });
+// algoritmo simples
+data.sort((a,b)=> (b.views+b.likes) - (a.views+a.likes));
+
+data.forEach((v)=>{
+lista.innerHTML += `
+<div class="video" onclick="abrirVideo('${v.id}')">
+<img src="${v.thumb}">
+<p>${v.titulo}</p>
+<p>👁️ ${v.views} ❤️ ${v.likes}</p>
+</div>
+`;
+});
 }
 
-// 🔎 PESQUISA
+// 🔍 PESQUISA
 document.getElementById("pesquisa").oninput = async (e)=>{
-  let termo = e.target.value.toLowerCase();
-  let { data } = await supabase.from("videos").select("*");
 
-  let lista = document.getElementById("videos");
-  lista.innerHTML="";
+let termo = e.target.value.toLowerCase();
 
-  data.forEach(v=>{
-    if(v.titulo.toLowerCase().includes(termo)){
-      lista.innerHTML += `
-        <div onclick="abrirVideo('${v.id}')">
-          <img src="${v.thumb}">
-          <p>${v.titulo}</p>
-        </div>
-      `;
-    }
-  });
+let { data } = await supabase.from("videos").select("*");
+
+let lista = document.getElementById("videos");
+lista.innerHTML="";
+
+data.forEach(v=>{
+if(v.titulo.toLowerCase().includes(termo)){
+lista.innerHTML += `
+<div class="video" onclick="abrirVideo('${v.id}')">
+<img src="${v.thumb}">
+<p>${v.titulo}</p>
+</div>
+`;
+}
+});
 }
 
+// ▶️ ABRIR
 function abrirVideo(id){
-  location.href = "video.html?id="+id;
-}
-
-// 🔴 BOTÃO CRIAR
-function abrirCriar(){
-  document.getElementById("uploadBox").style.display="block";
+window.location.href = "video.html?id="+id;
 }
 
 carregarVideos();
-  <div id="uploadBox" style="display:none">
-  <input type="file" id="videoFile" accept="video/*">
-  <input type="file" id="thumbFile" accept="image/*">
-  <input id="titulo" placeholder="Título">
-  <textarea id="desc" placeholder="Descrição"></textarea>
 
-  <button onclick="postarVideo()">Postar</button>
-</div>
-  async function postarVideo(){  
-  let video = videoFile.files[0];  
-  let thumb = thumbFile.files[0];  
+</script>
 
-  if(!video || !thumb){
-    alert("Escolhe o vídeo e a thumbnail!");
-    return;
-  }
-
-  let nomeVideo = Date.now()+video.name;  
-  let nomeThumb = Date.now()+thumb.name;  
-
-  await supabase.storage.from("videos").upload(nomeVideo, video);  
-  await supabase.storage.from("thumbs").upload(nomeThumb, thumb);  
-
-  let videoURL = supabase.storage.from("videos").getPublicUrl(nomeVideo).data.publicUrl;  
-  let thumbURL = supabase.storage.from("thumbs").getPublicUrl(nomeThumb).data.publicUrl;  
-
-  await supabase.from("videos").insert([{  
-    titulo: titulo.value,  
-    descricao: desc.value,  
-    url: videoURL,  
-    thumb: thumbURL,  
-    dono: usuario,  
-    views:0,  
-    likes:0  
-  }]);  
+</body>
+</html>
 
   alert("Postado!");  
   carregarVideos();  
