@@ -1,3 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Datuber</title>
+</head>
+
+<body style="margin:0;background:#111;color:white;font-family:Arial;">
+
+<!-- HEADER -->
+<div style="display:flex;justify-content:space-between;background:#202020;padding:10px;align-items:center;">
+<h2>📺 Datuber</h2>
+
+<input id="pesquisa" placeholder="Pesquisar">
+
+<div style="display:flex;gap:10px;">
+<button onclick="abrirCriar()">➕</button>
+<button onclick="mudarIdioma()">🌐</button>
+<img id="fotoPerfil" onclick="abrirMenu()" style="width:40px;height:40px;border-radius:50%;cursor:pointer;">
+</div>
+</div>
+
+<!-- MENU PERFIL -->
+<div id="menuPerfil" style="display:none;position:absolute;right:10px;background:#222;padding:10px;">
+<p onclick="login()">Login</p>
+<p onclick="mudarFoto()">Foto</p>
+</div>
+
+<!-- MENU CRIAR -->
+<div id="menuCriar" style="display:none;background:#222;padding:10px;">
+<button onclick="criarVideo()">🎥 Postar Vídeo</button>
+</div>
+
+<hr>
+
+<!-- FEED -->
+<div id="feed"></div>
+
 <script>
 
 // 👤 USER
@@ -37,28 +75,15 @@ i.click();
 
 // IDIOMA
 function mudarIdioma(){
-let l = localStorage.getItem("lang")||"pt";
-l = l=="pt"?"en":l=="en"?"es":"pt";
-localStorage.setItem("lang",l);
-alert("Idioma: "+l);
+alert("Idioma trocado (demo)");
 }
 
-// NAV
-function irCanal(){ location="canal.html"; }
-function irStudio(){ location="studio.html"; }
-function abrirLive(){ alert("Live em breve"); }
-function irShorts(){ location="shorts.html"; }
-function home(){ location.reload(); }
-
-// 🔥 BASE (SEMPRE RECARREGA)
+// BASE
 function getVideos(){
 return JSON.parse(localStorage.getItem("videos")) || [];
 }
-function getShorts(){
-return JSON.parse(localStorage.getItem("shorts")) || [];
-}
 
-// 🎥 POSTAR VIDEO (CORRIGIDO)
+// 🎥 POSTAR VIDEO (FUNCIONANDO)
 function criarVideo(){
 
 let v = document.createElement("input");
@@ -105,86 +130,42 @@ carregar();
 
 rt.readAsDataURL(t.files[0]);
 }
-
 rv.readAsDataURL(v.files[0]);
 
 }
-
 }
 }
 
-// 🎬 SHORTS (CORRIGIDO)
-function criarShort(){
-
-let v=document.createElement("input");
-v.type="file"; v.accept="video/*";
-
-v.click();
-
-v.onchange=()=>{
-
-let r=new FileReader();
-
-r.onload=()=>{
-
-let shorts = getShorts();
-
-shorts.unshift({
-video:r.result
-});
-
-localStorage.setItem("shorts",JSON.stringify(shorts));
-
-alert("Short postado!");
-
-}
-
-r.readAsDataURL(v.files[0]);
-
-}
-
-}
-
-// 📝 POST
-function criarPost(){
-let texto = prompt("Escreva algo:");
-let posts = JSON.parse(localStorage.getItem("posts")) || [];
-posts.unshift({texto});
-localStorage.setItem("posts",JSON.stringify(posts));
-carregar();
-}
-
-// 🔥 CARREGAR VIDEOS (FIX PRINCIPAL)
+// 🔥 CARREGAR VIDEOS (PÁGINA INICIAL)
 function carregar(){
 
+let feed = document.getElementById("feed");
 let lista = getVideos();
 
 feed.innerHTML="";
 
 if(lista.length === 0){
-feed.innerHTML = "<p>Nenhum vídeo encontrado</p>";
+feed.innerHTML = "<p>Nenhum vídeo ainda</p>";
 return;
 }
 
 lista.forEach((v,i)=>{
-
 feed.innerHTML += `
 <div onclick="abrirVideo(${i})" style="margin:10px;cursor:pointer;">
-<img src="${v.thumb}" width="250">
-<p>${v.titulo}</p>
-<p>${v.dono || ""}</p>
+<img src="${v.thumb}" width="300">
+<h3>${v.titulo}</h3>
+<p>${v.dono}</p>
 </div>
 `;
-
 });
 
 }
 
-// 🔍 PESQUISA (FIX)
-pesquisa.oninput=(e)=>{
-
+// 🔍 PESQUISA
+document.getElementById("pesquisa").oninput = (e)=>{
 let termo = e.target.value.toLowerCase();
 let lista = getVideos();
+let feed = document.getElementById("feed");
 
 feed.innerHTML="";
 
@@ -192,13 +173,12 @@ lista.forEach((v,i)=>{
 if(v.titulo.toLowerCase().includes(termo)){
 feed.innerHTML += `
 <div onclick="abrirVideo(${i})">
-<img src="${v.thumb}" width="250">
+<img src="${v.thumb}" width="300">
 <p>${v.titulo}</p>
 </div>
 `;
 }
 });
-
 }
 
 // ▶ ABRIR VIDEO
@@ -211,3 +191,6 @@ location="video.html";
 carregar();
 
 </script>
+
+</body>
+</html>
