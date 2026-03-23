@@ -1,274 +1,48 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>Datuber</title>
-
-<style>
-body{margin:0;background:#0f0f0f;color:white;font-family:Arial;}
-
-header{
-  <div id="uploadBox" style="display:none;padding:10px;">
-<input type="file" id="videoFile" accept="video/*"><br><br>
-<input type="file" id="thumbFile" accept="image/*"><br><br>
-<input id="titulo" placeholder="Título"><br><br>
-<button onclick="postarVideo()">POSTAR</button>
-</div>
-
-<div id="videos"></div>
-<div style="display:flex;align-items:center;gap:10px;">
-
-<button onclick="abrirUpload()">📤</button>
-<button onclick="iniciarLive()">🔴</button>
-<button onclick="abrirShorts()">🎬</button>
-
-<!-- FOTO DO CANAL -->
-<img id="fotoPerfil" src="https://via.placeholder.com/40" 
-style="width:40px;height:40px;border-radius:50%;cursor:pointer;"
-onclick="toggleMenu()">
-
-</div>
-}
-
-#videos{
-display:grid;
-grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
-gap:10px;
-padding:10px;
-}
-
-.video{
-background:#1c1c1c;
-padding:5px;
-border-radius:10px;
-cursor:pointer;
-}
-
-.thumb{
-width:100%;
-height:150px;
-object-fit:cover;
-border-radius:10px;
-}
-
-button{background:red;color:white;border:none;padding:5px;}
-</style>
 </head>
 
-<body>
+<body style="background:#0f0f0f;color:white;font-family:Arial;">
 
-<header>
+<header style="display:flex;justify-content:space-between;background:#202020;padding:10px;">
+
 <h2>📺 Datuber</h2>
 
-<input id="pesquisa" placeholder="Pesquisar">
+<div>
 
-<button onclick="abrirUpload()">Postar</button>
-<button onclick="irCanal()">Meu Canal</button>
-</header>
-  <button onclick="abrirShorts()">🎬 Shorts</button>
+<button onclick="verNoti()">🔔</button>
+<button onclick="irStudio()">📊</button>
+<button onclick="irCanal()">📺</button>
 
-<!-- UPLOAD -->
-<div id="uploadBox" style="display:none;padding:10px;">
-<input type="file" id="videoFile" accept="video/*"><br><br>
-<input type="file" id="thumbFile" accept="image/*"><br><br>
-<input id="titulo" placeholder="Título"><br><br>
-<button onclick="postarVideo()">POSTAR</button>
+<button onclick="mudarIdioma()">🌐</button>
+
+<button onclick="login()">👤</button>
+
 </div>
-  <label>
-<input type="checkbox" id="isShort"> É Short (vídeo curto)
-</label>
 
+</header>
+
+<div style="padding:10px;">
+
+<input id="titulo" placeholder="Título"><br><br>
+<input type="file" id="videoFile"><br><br>
+<input type="file" id="thumbFile"><br><br>
+
+<button onclick="postarVideo()">POSTAR</button>
+
+</div>
+
+<h2>📜 Vídeos</h2>
 <div id="videos"></div>
 
+<script src="app.js"></script>
+
 <script>
-
-let usuario = localStorage.getItem("user") || "Você";
-
-// 🔥 BANCO
-let videos = JSON.parse(localStorage.getItem("videos")) || [];
-
-// ABRIR UPLOAD
-function abrirUpload(){
-document.getElementById("uploadBox").style.display="block";
-}
-
-// 🚀 POSTAR (COM THUMBNAIL)
-function postarVideo(){
-
-let video = document.getElementById("videoFile").files[0];
-let thumb = document.getElementById("thumbFile").files[0];
-let titulo = document.getElementById("titulo").value;
-
-if(!video || !thumb || !titulo){
-alert("Preencha tudo!");
-return;
-}
-
-let readerVideo = new FileReader();
-let readerThumb = new FileReader();
-
-readerVideo.onload = () => {
-
-readerThumb.onload = () => {
-
-videos.unshift({
-titulo,
-video: readerVideo.result,
-thumb: readerThumb.result,
-dono: usuario,
-views:0,
-likes:0,
-comentarios:[]
-});
-
-localStorage.setItem("videos", JSON.stringify(videos));
-
-alert("Postado!");
-carregarVideos();
-}
-
-readerThumb.readAsDataURL(thumb);
-}
-
-readerVideo.readAsDataURL(video);
-}
-
-// 📺 CARREGAR (AGORA FUNCIONA)
-function carregarVideos(){
-
-let lista = document.getElementById("videos");
-lista.innerHTML="";
-
-videos.forEach((v,i)=>{
-
-lista.innerHTML+=`
-<div class="video" onclick="abrirVideo(${i})">
-<img class="thumb" src="${v.thumb}">
-<p>${v.titulo}</p>
-<p>${v.dono}</p>
-<p>👁️ ${v.views}</p>
-</div>
-`;
-
-});
-}
-
-// 🔍 PESQUISA
-document.getElementById("pesquisa").oninput = (e)=>{
-let termo = e.target.value.toLowerCase();
-
-let lista = document.getElementById("videos");
-lista.innerHTML="";
-
-videos.forEach((v,i)=>{
-if(v.titulo.toLowerCase().includes(termo)){
-lista.innerHTML+=`
-<div class="video" onclick="abrirVideo(${i})">
-<img class="thumb" src="${v.thumb}">
-<p>${v.titulo}</p>
-</div>`;
-}
-});
-}
-
-// ▶️ ABRIR
-function abrirVideo(id){
-localStorage.setItem("videoAtual", id);
-window.location.href="video.html";
-}
-
-// 👤 CANAL
-function irCanal(){
-window.location.href="canal.html";
-}
-
-carregarVideos();
-
-  <div id="menuPerfil" style="
-position:absolute;
-right:10px;
-top:60px;
-background:#202020;
-padding:10px;
-display:none;
-border-radius:10px;
-">
-
-
-  // ABRIR MENU
-window.toggleMenu = () => {
-let m = document.getElementById("menuPerfil");
-m.style.display = m.style.display=="block"?"none":"block";
-}
-
-// LOGIN
-window.login = () => {
-let nome = prompt("Digite seu nome:");
-localStorage.setItem("user", nome);
-alert("Logado!");
-location.reload();
-}
-
-// LOGOUT
-window.logout = () => {
-localStorage.removeItem("user");
-alert("Saiu!");
-location.reload();
-}
-
-// CANAL
-window.irCanal = () => {
-window.location.href = "canal.html";
-}
-
-// MUDAR FOTO
-window.mudarFoto = () => {
-let input = document.createElement("input");
-input.type="file";
-input.accept="image/*";
-
-input.onchange = () => {
-let reader = new FileReader();
-
-reader.onload = () => {
-localStorage.setItem("foto", reader.result);
-location.reload();
-}
-
-reader.readAsDataURL(input.files[0]);
-}
-
-input.click();
-}
-
-// MUDAR NOME
-window.mudarNome = () => {
-let nome = prompt("Novo nome:");
-localStorage.setItem("user", nome);
-location.reload();
-}
-
-// 🌐 IDIOMA (simples)
-window.mudarIdioma = () => {
-alert("Idioma em breve 😎");
-}
-
-// SETAR FOTO SALVA
-let fotoSalva = localStorage.getItem("foto");
-if(fotoSalva){
-document.getElementById("fotoPerfil").src = fotoSalva;
-}
-
-</div>
-
-
+carregarHome();
 </script>
 
-<p onclick="login()">👤 Login</p>
-<p onclick="irCanal()">📺 Meu canal</p>
-<p onclick="mudarFoto()">🖼️ Mudar foto</p>
-<p onclick="mudarNome()">✏️ Mudar nome</p>
-<p onclick="mudarIdioma()">🌐 Idioma</p>
-<p onclick="logout()">🚪 Sair</p>
 </body>
 </html>
