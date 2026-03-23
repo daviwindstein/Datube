@@ -17,7 +17,7 @@
 <div style="display:flex;gap:10px;align-items:center;">
 <button onclick="abrirCriar()">➕</button>
 <button onclick="mudarIdioma()">🌐</button>
-<img id="fotoPerfil" onclick="abrirMenu()" style="width:40px;height:40px;border-radius:50%;">
+<img id="fotoPerfil" onclick="abrirMenu()" style="width:40px;height:40px;border-radius:50%;cursor:pointer;">
 </div>
 
 </div>
@@ -32,10 +32,10 @@
 
 <!-- MENU CRIAR -->
 <div id="menuCriar" style="display:none;background:#222;padding:10px;">
-<button onclick="postarVideo()">🎥 Vídeo</button>
-<button onclick="criarPost()">📝 Postagem</button>
+<button onclick="criarVideo()">🎥 Postar Vídeo</button>
+<button onclick="criarShort()">🎬 Shorts</button>
 <button onclick="abrirLive()">🔴 Live</button>
-<button onclick="postarShort()">🎬 Shorts</button>
+<button onclick="criarPost()">📝 Postagem</button>
 </div>
 
 <!-- MENU LATERAL -->
@@ -51,10 +51,10 @@
 
 <script>
 
-// 👤 USER
+// USER
 let user = localStorage.getItem("user") || "Você";
 let foto = localStorage.getItem("foto") || "https://via.placeholder.com/40";
-document.getElementById("fotoPerfil").src = foto;
+fotoPerfil.src = foto;
 
 // MENU
 function abrirMenu(){
@@ -91,10 +91,10 @@ function mudarIdioma(){
 let l = localStorage.getItem("lang")||"pt";
 l = l=="pt"?"en":l=="en"?"es":"pt";
 localStorage.setItem("lang",l);
-alert(l);
+alert("Idioma: "+l);
 }
 
-// NAVEGAÇÃO
+// NAV
 function irCanal(){ location="canal.html"; }
 function irStudio(){ location="studio.html"; }
 function abrirLive(){ location="live.html"; }
@@ -106,10 +106,12 @@ let videos = JSON.parse(localStorage.getItem("videos"))||[];
 let shorts = JSON.parse(localStorage.getItem("shorts"))||[];
 let posts = JSON.parse(localStorage.getItem("posts"))||[];
 
-// 🎥 VIDEO
-function postarVideo(){
+// 🎥 CRIAR VIDEO COMPLETO
+function criarVideo(){
+
 let v = document.createElement("input");
 v.type="file"; v.accept="video/*";
+
 let t = document.createElement("input");
 t.type="file"; t.accept="image/*";
 
@@ -119,9 +121,12 @@ v.onchange=()=>{
 t.click();
 
 t.onchange=()=>{
+
 let titulo = prompt("Título:");
-let rv=new FileReader();
-let rt=new FileReader();
+let desc = prompt("Descrição:");
+
+let rv = new FileReader();
+let rt = new FileReader();
 
 rv.onload=()=>{
 rt.onload=()=>{
@@ -129,6 +134,7 @@ rt.onload=()=>{
 videos.unshift({
 tipo:"video",
 titulo,
+desc,
 video:rv.result,
 thumb:rt.result,
 dono:user
@@ -141,41 +147,49 @@ carregar();
 rt.readAsDataURL(t.files[0]);
 }
 rv.readAsDataURL(v.files[0]);
+
 }
 }
 }
 
-// 🎬 SHORT
-function postarShort(){
+// 🎬 SHORTS (até 60s)
+function criarShort(){
+
 let v=document.createElement("input");
 v.type="file"; v.accept="video/*";
 
 v.click();
 
 v.onchange=()=>{
+
+let file = v.files[0];
+
 let r=new FileReader();
+
 r.onload=()=>{
 shorts.unshift({
-tipo:"short",
 video:r.result
 });
 localStorage.setItem("shorts",JSON.stringify(shorts));
 }
-r.readAsDataURL(v.files[0]);
+
+r.readAsDataURL(file);
+
 }
 }
 
 // 📝 POST
 function criarPost(){
-let texto = prompt("Escreva:");
-posts.unshift({tipo:"post",texto});
+let texto = prompt("Escreva algo:");
+posts.unshift({texto});
 localStorage.setItem("posts",JSON.stringify(posts));
 carregar();
 }
 
-// 🔥 FEED (SÓ VIDEOS NA HOME)
+// FEED (APENAS VIDEOS)
 function carregar(){
 feed.innerHTML="";
+
 videos.forEach((v,i)=>{
 feed.innerHTML+=`
 <div onclick="abrirVideo(${i})">
@@ -189,6 +203,7 @@ feed.innerHTML+=`
 pesquisa.oninput=(e)=>{
 let t=e.target.value.toLowerCase();
 feed.innerHTML="";
+
 videos.forEach((v,i)=>{
 if(v.titulo.toLowerCase().includes(t)){
 feed.innerHTML+=`
@@ -200,7 +215,7 @@ feed.innerHTML+=`
 });
 }
 
-// ABRIR
+// ABRIR VIDEO
 function abrirVideo(i){
 localStorage.setItem("videoAtual",i);
 location="video.html";
