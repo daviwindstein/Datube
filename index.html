@@ -54,7 +54,7 @@
 // USER
 let user = localStorage.getItem("user") || "Você";
 let foto = localStorage.getItem("foto") || "https://via.placeholder.com/40";
-fotoPerfil.src = foto;
+document.getElementById("fotoPerfil").src = foto;
 
 // MENU
 function abrirMenu(){
@@ -106,7 +106,7 @@ let videos = JSON.parse(localStorage.getItem("videos"))||[];
 let shorts = JSON.parse(localStorage.getItem("shorts"))||[];
 let posts = JSON.parse(localStorage.getItem("posts"))||[];
 
-// 🎥 CRIAR VIDEO COMPLETO
+// 🎥 VIDEO COMPLETO
 function criarVideo(){
 
 let v = document.createElement("input");
@@ -118,6 +118,8 @@ t.type="file"; t.accept="image/*";
 v.click();
 
 v.onchange=()=>{
+if(!v.files[0]) return;
+
 t.click();
 
 t.onchange=()=>{
@@ -141,39 +143,67 @@ dono:user
 });
 
 localStorage.setItem("videos",JSON.stringify(videos));
+
+alert("Vídeo postado!");
 carregar();
 
 }
+
 rt.readAsDataURL(t.files[0]);
 }
+
 rv.readAsDataURL(v.files[0]);
 
 }
+
 }
 }
 
-// 🎬 SHORTS (até 60s)
+// 🎬 SHORTS COMPLETO
 function criarShort(){
 
 let v=document.createElement("input");
 v.type="file"; v.accept="video/*";
 
+let t=document.createElement("input");
+t.type="file"; t.accept="image/*";
+
 v.click();
 
 v.onchange=()=>{
 
-let file = v.files[0];
+if(!v.files[0]) return;
 
-let r=new FileReader();
+t.click();
 
-r.onload=()=>{
+t.onchange=()=>{
+
+let titulo = prompt("Título do short:");
+let desc = prompt("Descrição:");
+
+let rv=new FileReader();
+let rt=new FileReader();
+
+rv.onload=()=>{
+rt.onload=()=>{
+
 shorts.unshift({
-video:r.result
+titulo,
+desc,
+video:rv.result,
+thumb:rt.result
 });
+
 localStorage.setItem("shorts",JSON.stringify(shorts));
+alert("Short postado!");
+
 }
 
-r.readAsDataURL(file);
+rt.readAsDataURL(t.files[0]);
+}
+rv.readAsDataURL(v.files[0]);
+
+}
 
 }
 }
@@ -186,20 +216,29 @@ localStorage.setItem("posts",JSON.stringify(posts));
 carregar();
 }
 
-// FEED (APENAS VIDEOS)
+// 🔥 FEED (AGORA FUNCIONA CERTO)
 function carregar(){
+
 feed.innerHTML="";
+
+if(videos.length === 0){
+feed.innerHTML = "<p>Nenhum vídeo encontrado</p>";
+return;
+}
 
 videos.forEach((v,i)=>{
 feed.innerHTML+=`
-<div onclick="abrirVideo(${i})">
-<img src="${v.thumb}" width="200">
+<div onclick="abrirVideo(${i})" style="margin:10px;cursor:pointer;">
+<img src="${v.thumb}" width="250">
 <p>${v.titulo}</p>
-</div>`;
+<p>${v.dono}</p>
+</div>
+`;
 });
+
 }
 
-// PESQUISA
+// 🔍 PESQUISA FUNCIONAL
 pesquisa.oninput=(e)=>{
 let t=e.target.value.toLowerCase();
 feed.innerHTML="";
@@ -208,19 +247,21 @@ videos.forEach((v,i)=>{
 if(v.titulo.toLowerCase().includes(t)){
 feed.innerHTML+=`
 <div onclick="abrirVideo(${i})">
-<img src="${v.thumb}" width="200">
+<img src="${v.thumb}" width="250">
 <p>${v.titulo}</p>
-</div>`;
+</div>
+`;
 }
 });
 }
 
-// ABRIR VIDEO
+// ▶ ABRIR VIDEO
 function abrirVideo(i){
 localStorage.setItem("videoAtual",i);
 location="video.html";
 }
 
+// START
 carregar();
 
 </script>
