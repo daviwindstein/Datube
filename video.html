@@ -5,10 +5,12 @@
 <video id="player" controls width="100%"></video>
 
 <h2 id="titulo"></h2>
+<p id="dono"></p>
 
 <button onclick="like()">👍 Like</button>
-<button onclick="comentar()">💬 Comentar</button>
 
+<h3>Comentários</h3>
+<button onclick="comentar()">Comentar</button>
 <div id="comentarios"></div>
 
 <script>
@@ -18,35 +20,29 @@ let id = localStorage.getItem("videoAtual");
 
 let v = videos[id];
 
-// MOSTRAR
-player.src = v.url;
+player.src = v.video;
 titulo.innerText = v.titulo;
+dono.innerText = v.dono;
 
 // VIEW
 v.views++;
 localStorage.setItem("videos", JSON.stringify(videos));
 
-// LIKE
 function like(){
 v.likes++;
 localStorage.setItem("videos", JSON.stringify(videos));
 alert("Like!");
 }
 
-// COMENTAR
 function comentar(){
 let texto = prompt("Comentário:");
-
 v.comentarios.push(texto);
 localStorage.setItem("videos", JSON.stringify(videos));
-
 mostrar();
 }
 
-// MOSTRAR COMENTÁRIOS
 function mostrar(){
 comentarios.innerHTML="";
-
 v.comentarios.forEach(c=>{
 comentarios.innerHTML += "<p>"+c+"</p>";
 });
