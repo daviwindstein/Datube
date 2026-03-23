@@ -70,21 +70,22 @@ function renderComentarios(list){
     div.innerHTML += `<p><b>${c.usuario}:</b> ${c.texto}</p>`;
   });
 }
+async function darLike(id){
+  let { data } = await supabase.from("videos").select("likes").eq("id",id).single();
 
-// --- LIKES ---
-function likeVideo(){
-  if(!usuario) return alert("Faça login!");
-  const tx = db.transaction(["videos"],"readwrite");
-  const store = tx.objectStore("videos");
-  const req = store.get(idVideo);
-  req.onsuccess = e=>{
-    const v = e.target.result;
-    v.likes++;
-    store.put(v);
-    alert("Curtido! Total: "+v.likes);
-  }
+  await supabase.from("videos").update({
+    likes: data.likes + 1
+  }).eq("id",id);
+}
 }
 
+  async function addView(id){
+  let { data } = await supabase.from("videos").select("views").eq("id",id).single();
+
+  await supabase.from("videos").update({
+    views: data.views + 1
+  }).eq("id",id);
+}
 // --- INSCRITOS ---
 function inscrever(){
   if(!usuario) return alert("Faça login!");
