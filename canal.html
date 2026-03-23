@@ -1,31 +1,45 @@
 <!DOCTYPE html>
 <html>
-<body style="background:#0f0f0f;color:white;font-family:Arial;">
+<body style="background:#111;color:white;">
 
 <h1 id="nome"></h1>
+<img id="foto" width="80"><hr>
 
 <div id="videos"></div>
 
-<script src="app.js"></script>
-
 <script>
 
-let user = localStorage.getItem("user");
+let userLogado = localStorage.getItem("user");
+let canal = localStorage.getItem("canalAtual") || userLogado;
 
-document.getElementById("nome").innerText = user;
+document.getElementById("nome").innerText = canal;
 
+// FOTO DO DONO
+let foto = localStorage.getItem("foto");
+document.getElementById("foto").src = foto;
+
+// LISTAR VIDEOS DO CANAL
 let lista = document.getElementById("videos");
+let videos = JSON.parse(localStorage.getItem("videos")) || [];
 
 videos.forEach((v,i)=>{
-if(v.dono === user){
-lista.innerHTML+=`
-<div onclick="abrirVideo(${i})">
+if(v.dono === canal){
+
+lista.innerHTML += `
+<div onclick="abrir(${i})">
 <img src="${v.thumb}" width="200">
 <p>${v.titulo}</p>
 </div>
 `;
+
 }
 });
+
+// ABRIR VIDEO
+function abrir(i){
+localStorage.setItem("videoAtual", i);
+window.location.href="video.html";
+}
 
 </script>
 
