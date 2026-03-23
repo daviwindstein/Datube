@@ -7,86 +7,111 @@
 
 <body style="background:#111;color:white;font-family:Arial;">
 
-<header style="display:flex;justify-content:space-between;background:#202020;padding:10px;">
+<!-- HEADER -->
+<div style="display:flex;justify-content:space-between;background:#202020;padding:10px;align-items:center;">
 
 <h2>📺 Datuber</h2>
 
-<div>
-<img id="fotoPerfil" onclick="abrirMenu()" style="width:40px;height:40px;border-radius:50%;cursor:pointer;">
-</div>
+<input id="pesquisa" placeholder="Pesquisar">
 
-</header>
+<div style="display:flex;gap:10px;align-items:center;">
+
+<button onclick="abrirShorts()">🎬</button>
+<button onclick="irStudio()">📊</button>
+<button onclick="irCanal()">📺</button>
+<button onclick="mudarIdioma()">🌐</button>
+
+<img id="fotoPerfil" onclick="menu()" style="width:40px;height:40px;border-radius:50%;cursor:pointer;">
+
+</div>
+</div>
 
 <!-- MENU -->
 <div id="menu" style="display:none;background:#222;padding:10px;position:absolute;right:10px;">
-<p onclick="login()">👤 Login</p>
-<p onclick="mudarFoto()">🖼️ Mudar foto</p>
-<p onclick="mudarNome()">✏️ Mudar nome</p>
-<p onclick="irCanal()">📺 Meu canal</p>
+<p onclick="login()">Login</p>
+<p onclick="logout()">Sair</p>
+<p onclick="mudarFoto()">Foto</p>
+<p onclick="mudarNome()">Nome</p>
 </div>
 
-<hr>
-
+<!-- UPLOAD -->
+<div style="padding:10px;">
 <input id="titulo" placeholder="Título"><br><br>
 <input type="file" id="videoFile"><br><br>
 <input type="file" id="thumbFile"><br><br>
 
-<button onclick="postar()">POSTAR</button>
+<button onclick="postar()">📤 Postar</button>
+</div>
 
-<h2>Vídeos</h2>
+<hr>
+
 <div id="videos"></div>
 
 <script>
 
-// 👤 USUÁRIO
+// 👤 USER
 let user = localStorage.getItem("user") || "Você";
 let foto = localStorage.getItem("foto") || "https://via.placeholder.com/40";
-
-// SET FOTO
 document.getElementById("fotoPerfil").src = foto;
 
 // MENU
-function abrirMenu(){
+function menu(){
 let m = document.getElementById("menu");
 m.style.display = m.style.display=="block"?"none":"block";
 }
 
 // LOGIN
 function login(){
-let nome = prompt("Seu nome:");
+let nome = prompt("Nome:");
+let senha = prompt("Senha:");
 localStorage.setItem("user", nome);
+localStorage.setItem("senha", senha);
 location.reload();
 }
 
-// MUDAR FOTO
+// LOGOUT
+function logout(){
+localStorage.clear();
+location.reload();
+}
+
+// FOTO
 function mudarFoto(){
 let input = document.createElement("input");
 input.type="file";
 
-input.onchange = () => {
-let reader = new FileReader();
-reader.onload = () => {
-localStorage.setItem("foto", reader.result);
+input.onchange = ()=>{
+let r = new FileReader();
+r.onload = ()=>{
+localStorage.setItem("foto", r.result);
 location.reload();
 }
-reader.readAsDataURL(input.files[0]);
+r.readAsDataURL(input.files[0]);
 }
 input.click();
 }
 
-// MUDAR NOME
+// NOME
 function mudarNome(){
-let nome = prompt("Novo nome:");
-localStorage.setItem("user", nome);
+let n = prompt("Novo nome:");
+localStorage.setItem("user", n);
 location.reload();
 }
 
-// IR CANAL
-function irCanal(){
-window.location.href = "canal.html";
+// IDIOMA
+function mudarIdioma(){
+let lang = localStorage.getItem("lang") || "pt";
+lang = lang=="pt"?"en":lang=="en"?"es":"pt";
+localStorage.setItem("lang", lang);
+alert("Idioma: "+lang);
 }
 
-// 🎥 VIDEOS
+// IR
+function irCanal(){ window.location="canal.html"; }
+function irStudio(){ window.location="studio.html"; }
+function abrirShorts(){ window.location="shorts.html"; }
+
+// VIDEOS
 let videos = JSON.parse(localStorage.getItem("videos")) || [];
 
 // POSTAR
@@ -96,28 +121,25 @@ let v = videoFile.files[0];
 let t = thumbFile.files[0];
 let titulo = document.getElementById("titulo").value;
 
-if(!v || !t || !titulo){
-alert("Preencha tudo!");
-return;
-}
+if(!v || !t || !titulo){ alert("Preencha tudo"); return; }
 
 let rv = new FileReader();
 let rt = new FileReader();
 
-rv.onload = () => {
-rt.onload = () => {
+rv.onload = ()=>{
+rt.onload = ()=>{
 
 videos.unshift({
 titulo,
 video: rv.result,
 thumb: rt.result,
-dono: user
+dono: user,
+likes:0,
+views:0
 });
 
 localStorage.setItem("videos", JSON.stringify(videos));
-
-alert("Postado!");
-carregar();
+location.reload();
 
 }
 rt.readAsDataURL(t);
@@ -134,20 +156,36 @@ let lista = document.getElementById("videos");
 lista.innerHTML="";
 
 videos.forEach((v,i)=>{
-lista.innerHTML += `
+lista.innerHTML+=`
 <div onclick="abrir(${i})">
 <img src="${v.thumb}" width="200">
 <p>${v.titulo}</p>
 <p>${v.dono}</p>
-</div>
-`;
+</div>`;
 });
 }
 
-// ABRIR VIDEO
+// PESQUISA
+pesquisa.oninput = (e)=>{
+let t = e.target.value.toLowerCase();
+let lista = document.getElementById("videos");
+lista.innerHTML="";
+
+videos.forEach((v,i)=>{
+if(v.titulo.toLowerCase().includes(t)){
+lista.innerHTML+=`
+<div onclick="abrir(${i})">
+<img src="${v.thumb}" width="200">
+<p>${v.titulo}</p>
+</div>`;
+}
+});
+}
+
+// ABRIR
 function abrir(i){
 localStorage.setItem("videoAtual", i);
-window.location.href="video.html";
+window.location="video.html";
 }
 
 carregar();
