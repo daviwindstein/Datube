@@ -1,159 +1,62 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Assistir Vídeo</title>
+<title>Assistir</title>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
+
 <style>
 body{background:#0f0f0f;color:white;font-family:Arial;}
-video{width:100%;max-height:500px;}
-#comentarios{margin-top:10px;}
+video{width:100%;}
+button{background:red;color:white;border:none;padding:10px;}
 </style>
 </head>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
-<script>
-const supabase = window.supabase.createClient("SUA_URL","SUA_KEY");
-
-let id = new URLSearchParams(location.search).get("id");
-
-async function carregar(){
-  let { data } = await supabase.from("videos").select("*").eq("id",id).single();
-
-  document.getElementById("player").src = data.url;
-  document.getElementById("titulo").innerText = data.titulo;
-
-  // 👁️ VIEW AUTOMÁTICO
-  await supabase.from("videos").update({
-    views: data.views + 1
-  }).eq("id",id);
-}
-
-async function like(){
-  let { data } = await supabase.from("videos").select("likes").eq("id",id).single();
-
-  await supabase.from("videos").update({
-    likes: data.likes + 1
-  }).eq("id",id);
-}
-
-carregar();
-</script>
 <body>
 
-<h2 id="titulo"></h2>
-<p id="canal"></p>
 <video id="player" controls></video>
-<button onclick="likeVideo()">Curtir ❤️</button>
-<button onclick="inscrever()">Inscrever-se</button>
 
-<h3>Comentários</h3>
-<button onclick="comentar()">Comentar</button>
-<div id="comentarios"></div>
+<h2 id="titulo"></h2>
+
+<button onclick="darLike()">👍 Like</button>
 
 <script>
-let db;
-const idVideo = Number(localStorage.getItem("videoAtual"));
-let usuario = localStorage.getItem("usuario");
 
-// --- INDEXEDDB ---
-const request = indexedDB.open("DatuberDB",1);
-request.onsuccess = e => {
-  db = e.target.result;
-  carregarVideo();
-};
-
-function carregarVideo(){
-  const tx = db.transaction(["videos"],"readonly");
-  const store = tx.objectStore("videos");
-  const req = store.get(idVideo);
-  req.onsuccess = e=>{
-    const v = e.target.result;
-    if(!v){alert("Vídeo não encontrado!"); return;}
-    document.getElementById("player").src = v.video;
-    document.getElementById("titulo").innerText = v.titulo;
-    document.getElementById("canal").innerText = v.dono;
-    renderComentarios(v.comentarios);
-  }
-}
-
-// --- COMENTARIOS ---
-function comentar(){
-  if(!usuario) return alert("Faça login!");
-  const txt = prompt("Digite seu comentário:");
-  if(!txt) return;
-  const tx = db.transaction(["videos"],"readwrite");
-  const store = tx.objectStore("videos");
-  const req = store.get(idVideo);
-  req.onsuccess = e=>{
-    const v = e.target.result;
-    v.comentarios.push({usuario, texto:txt});
-    const upd = store.put(v);
-    upd.onsuccess = ()=>renderComentarios(v.comentarios);
-  }
-}
-
-function renderComentarios(list){
-  const div = document.getElementById("comentarios");
-  div.innerHTML="";
-  list.forEach(c=>{
-    div.innerHTML += `<p><b>${c.usuario}:</b> ${c.texto}</p>`;
-  });
-}
-async function darLike(id){
-  let { data } = await supabase.from("videos").select("likes").eq("id",id).single();
-
-  await supabase.from("videos").update({
-    likes: data.likes + 1
-  }).eq("id",id);
-}
-}
-
-  async function addView(id){
-  let { data } = await supabase.from("videos").select("views").eq("id",id).single();
-
-  await supabase.from("videos").update({
-    views: data.views + 1
-  }).eq("id",id);
-}
-// --- INSCRITOS ---
-function inscrever(){
-  if(!usuario) return alert("Faça login!");
-  alert("Inscrito no canal de "+document.getElementById("canal").innerText+" ✅");
-}
-</script>
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-
-<script>
 const supabase = window.supabase.createClient("SUA_URL","SUA_KEY");
 
 let id = new URLSearchParams(location.search).get("id");
 
+// carregar vídeo
 async function carregar(){
-  let { data } = await supabase.from("videos").select("*").eq("id",id).single();
 
-  document.getElementById("player").src = data.url;
-  document.getElementById("titulo").innerText = data.titulo;
+let { data } = await supabase.from("videos").select("*").eq("id",id).single();
 
-  // 👁️ VIEW AUTOMÁTICO
-  await supabase.from("videos").update({
-    views: data.views + 1
-  }).eq("id",id);
+document.getElementById("player").src = data.url;
+document.getElementById("titulo").innerText = data.titulo;
+
+// view automático
+await supabase.from("videos").update({
+views: data.views + 1
+}).eq("id",id);
+
 }
 
-async function like(){
-  let { data } = await supabase.from("videos").select("likes").eq("id",id).single();
+// like
+async function darLike(){
 
-  await supabase.from("videos").update({
-    likes: data.likes + 1
-  }).eq("id",id);
+let { data } = await supabase.from("videos").select("likes").eq("id",id).single();
+
+await supabase.from("videos").update({
+likes: data.likes + 1
+}).eq("id",id);
+
+alert("Like!");
 }
-  <video id="player" controls width="100%"></video>
-
-<h2 id="titulo"></h2>
-
-<button onclick="like()">👍 Like</button>
 
 carregar();
+
 </script>
+
 </body>
 </html>
