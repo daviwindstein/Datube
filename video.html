@@ -18,8 +18,9 @@ button{background:red;color:white;border:none;padding:10px;}
 <video id="player" controls></video>
 
 <h2 id="titulo"></h2>
+<p id="canal"></p>
 
-<button onclick="darLike()">👍 Like</button>
+<button onclick="like()">👍 Like</button>
 
 <script>
 
@@ -27,28 +28,27 @@ const supabase = window.supabase.createClient("SUA_URL","SUA_KEY");
 
 let id = new URLSearchParams(location.search).get("id");
 
-// carregar vídeo
 async function carregar(){
 
 let { data } = await supabase.from("videos").select("*").eq("id",id).single();
 
-document.getElementById("player").src = data.url;
-document.getElementById("titulo").innerText = data.titulo;
+player.src = data.url;
+titulo.innerText = data.titulo;
+canal.innerText = data.dono;
 
-// view automático
+// view
 await supabase.from("videos").update({
-views: data.views + 1
+views: data.views+1
 }).eq("id",id);
 
 }
 
-// like
-async function darLike(){
+async function like(){
 
 let { data } = await supabase.from("videos").select("likes").eq("id",id).single();
 
 await supabase.from("videos").update({
-likes: data.likes + 1
+likes: data.likes+1
 }).eq("id",id);
 
 alert("Like!");
