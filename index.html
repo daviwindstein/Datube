@@ -8,10 +8,18 @@
 body{margin:0;background:#0f0f0f;color:white;font-family:Arial;}
 
 header{
-display:flex;
-justify-content:space-between;
-padding:10px;
-background:#202020;
+<div style="display:flex;align-items:center;gap:10px;">
+
+<button onclick="abrirUpload()">📤</button>
+<button onclick="iniciarLive()">🔴</button>
+<button onclick="abrirShorts()">🎬</button>
+
+<!-- FOTO DO CANAL -->
+<img id="fotoPerfil" src="https://via.placeholder.com/40" 
+style="width:40px;height:40px;border-radius:50%;cursor:pointer;"
+onclick="toggleMenu()">
+
+</div>
 }
 
 #videos{
