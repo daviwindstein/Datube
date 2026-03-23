@@ -14,6 +14,26 @@ div.innerHTML+=`
 <video src="${v.video}" controls style="height:100vh;width:100%"></video>`;
 });
 
+  <!DOCTYPE html>
+<html>
+<body style="background:black;color:white;text-align:center;">
+
+<h1>🎬 Shorts</h1>
+<div id="s"></div>
+
+<script>
+let shorts = JSON.parse(localStorage.getItem("shorts")) || [];
+
+shorts.forEach(v=>{
+document.getElementById("s").innerHTML += `
+<video src="${v.video}" controls width="300"></video><br><br>
+`;
+});
+</script>
+
+</body>
+</html>
+
 </script>
 
 </body>
