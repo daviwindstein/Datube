@@ -1,13 +1,9 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta charset="UTF-8">
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
-</head>
-
-<body style="background:#0f0f0f;color:white">
+<body style="background:#0f0f0f;color:white;font-family:Arial;">
 
 <video id="player" controls width="100%"></video>
+
 <h2 id="titulo"></h2>
 
 <button onclick="like()">👍 Like</button>
@@ -16,46 +12,48 @@
 <div id="comentarios"></div>
 
 <script>
-const supabase=window.supabase.createClient("SUA_URL","SUA_KEY");
-let id=new URLSearchParams(location.search).get("id");
 
-async function carregar(){
-let {data}=await supabase.from("videos").select("*").eq("id",id).single();
+let videos = JSON.parse(localStorage.getItem("videos")) || [];
+let id = localStorage.getItem("videoAtual");
 
-player.src=data.url;
-titulo.innerText=data.titulo;
+let v = videos[id];
 
-await supabase.from("videos").update({
-views:data.views+1
-}).eq("id",id);
+// MOSTRAR
+player.src = v.url;
+titulo.innerText = v.titulo;
 
-carregarComentarios();
-}
+// VIEW
+v.views++;
+localStorage.setItem("videos", JSON.stringify(videos));
 
-async function like(){
-let {data}=await supabase.from("videos").select("likes").eq("id",id).single();
-await supabase.from("videos").update({likes:data.likes+1}).eq("id",id);
+// LIKE
+function like(){
+v.likes++;
+localStorage.setItem("videos", JSON.stringify(videos));
 alert("Like!");
 }
 
-async function comentar(){
-let texto=prompt("Comentário:");
-await supabase.from("comentarios").insert([{video:id,texto:texto}]);
-carregarComentarios();
+// COMENTAR
+function comentar(){
+let texto = prompt("Comentário:");
+
+v.comentarios.push(texto);
+localStorage.setItem("videos", JSON.stringify(videos));
+
+mostrar();
 }
 
-async function carregarComentarios(){
-let {data}=await supabase.from("comentarios").select("*");
-
+// MOSTRAR COMENTÁRIOS
+function mostrar(){
 comentarios.innerHTML="";
-data.forEach(c=>{
-if(c.video==id){
-comentarios.innerHTML+=`<p>${c.texto}</p>`;
-}
+
+v.comentarios.forEach(c=>{
+comentarios.innerHTML += "<p>"+c+"</p>";
 });
 }
 
-carregar();
+mostrar();
+
 </script>
 
 </body>
