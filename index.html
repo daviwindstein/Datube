@@ -41,8 +41,10 @@ background:#202020;padding:20px;display:none;flex-direction:column;}
 </div>
 
 <script>
-// --- BANCO LOCAL (IndexedDB) ---
 let db;
+let usuario = localStorage.getItem("usuario");
+
+// --- INDEXEDDB ---
 const request = indexedDB.open("DatuberDB",1);
 request.onupgradeneeded = e=>{
   db = e.target.result;
@@ -55,14 +57,12 @@ request.onsuccess = e=>{
 };
 
 // --- LOGIN ---
-let usuario = localStorage.getItem("usuario");
-
 function abrirLogin(){document.getElementById("loginBox").style.display="flex";}
 function fecharLogin(){document.getElementById("loginBox").style.display="none";}
 
 function criarConta(){
-  let u = document.getElementById("user").value.trim();
-  let p = document.getElementById("pass").value.trim();
+  const u = document.getElementById("user").value.trim();
+  const p = document.getElementById("pass").value.trim();
   if(!u||!p) return alert("Preencha tudo!");
   const tx = db.transaction(["usuarios"],"readwrite");
   const store = tx.objectStore("usuarios");
@@ -76,18 +76,19 @@ function criarConta(){
 }
 
 function fazerLogin(){
-  let u = document.getElementById("user").value.trim();
-  let p = document.getElementById("pass").value.trim();
+  const u = document.getElementById("user").value.trim();
+  const p = document.getElementById("pass").value.trim();
   if(!u||!p) return alert("Preencha tudo!");
   const tx = db.transaction(["usuarios"],"readonly");
   const store = tx.objectStore("usuarios");
   const req = store.get(u);
-  req.onsuccess = ()=>{
-    if(req.result && req.result.password===p){
-      usuario=u;
+  req.onsuccess = e=>{
+    const data = e.target.result;
+    if(data && data.password===p){
+      usuario = u;
       localStorage.setItem("usuario",usuario);
-      fecharLogin();
       alert("Logado como "+usuario);
+      fecharLogin();
       carregarVideos();
     } else alert("Usuário ou senha incorretos!");
   }
@@ -99,10 +100,9 @@ function uploadVideo(){
   const videoFile = document.getElementById("videoInput").files[0];
   const thumbFile = document.getElementById("thumbInput").files[0];
   if(!videoFile || !thumbFile) return alert("Escolha vídeo e thumbnail!");
-
-  if(videoFile.size>3e9) return alert("Máximo 1 hora de vídeo!");
   const titulo = prompt("Título do vídeo:");
   if(!titulo) return alert("Necessário título!");
+  if(videoFile.size>3e9) return alert("Máximo 1 hora de vídeo!");
 
   const readerVideo = new FileReader();
   const readerThumb = new FileReader();
@@ -113,7 +113,7 @@ function uploadVideo(){
       const thumbData = readerThumb.result;
       const tx = db.transaction(["videos"],"readwrite");
       const store = tx.objectStore("videos");
-      store.add({
+      const addReq = store.add({
         titulo,
         video: videoData,
         thumb: thumbData,
@@ -122,7 +122,12 @@ function uploadVideo(){
         likes:0,
         comentarios:[]
       });
-      tx.oncomplete = ()=>carregarVideos();
+      addReq.onsuccess = e=>{
+        const id = e.target.result; // id correto gerado pelo IndexedDB
+        carregarVideos(); // Atualiza a página
+        alert("Vídeo postado com sucesso!");
+        localStorage.setItem("videoAtual",id); // já define o vídeo atual para abrir
+      };
     }
     readerThumb.readAsDataURL(thumbFile);
   }
@@ -135,14 +140,14 @@ function carregarVideos(){
   container.innerHTML="";
   const tx = db.transaction(["videos"],"readonly");
   const store = tx.objectStore("videos");
-  const requestCursor = store.openCursor(null,"prev"); // mais recentes primeiro
-  requestCursor.onsuccess = e=>{
+  store.openCursor(null,"prev").onsuccess = e=>{
     const cursor = e.target.result;
     if(cursor){
       const v = cursor.value;
-      container.innerHTML+=`
+      const thumbSrc = v.thumb ? v.thumb : "";
+      container.innerHTML += `
       <div class="video" onclick="abrirVideo(${v.id})">
-        <img src="${v.thumb}">
+        <img src="${thumbSrc}">
         <p>${v.titulo}</p>
         <p>${v.dono}</p>
       </div>`;
@@ -170,13 +175,12 @@ document.getElementById("pesquisa").oninput = e=>{
   container.innerHTML="";
   const tx = db.transaction(["videos"],"readonly");
   const store = tx.objectStore("videos");
-  const req = store.openCursor(null,"prev");
-  req.onsuccess = e=>{
+  store.openCursor(null,"prev").onsuccess = e=>{
     const cursor = e.target.result;
     if(cursor){
       const v = cursor.value;
       if(v.titulo.toLowerCase().includes(termo)){
-        container.innerHTML+=`
+        container.innerHTML += `
         <div class="video" onclick="abrirVideo(${v.id})">
           <img src="${v.thumb}">
           <p>${v.titulo}</p>
