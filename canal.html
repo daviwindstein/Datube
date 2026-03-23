@@ -1,68 +1,29 @@
-<!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<title>Datuber - Canal</title>
-<style>
-  body { background:#0f0f0f; color:#ddd; font-family:Arial, sans-serif; padding:10px; margin:0; }
-  #nomeCanal { display:flex; align-items:center; gap:10px; }
-  #nomeCanal img { width:50px; height:50px; border-radius:50%; }
-  button { background:#e33; border:none; color:white; padding:5px 10px; margin:10px 0; cursor:pointer; border-radius:3px; }
-  .videos { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:10px; }
-  .video { background:#181818; padding:5px; border:1px solid #333; border-radius:5px; cursor:pointer; }
-  .video video { width:100%; border-radius:4px; }
-</style>
-</head>
-<body>
-<div id="nomeCanal">
-  <img id="foto" src="">
-  <h1 id="nome"></h1>
-</div>
-<button id="inscreverBtn">Inscrever</button>
+<body style="background:#0f0f0f;color:white">
 
-<div class="videos" id="videos"></div>
+<h1 id="nome"></h1>
+<input type="file" id="banner">
+<button onclick="salvarBanner()">Salvar Banner</button>
+
+<div id="videos"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 
 <script>
-let usuario = localStorage.getItem("usuario");
-let users = JSON.parse(localStorage.getItem("users") || "[]");
-let videos = JSON.parse(localStorage.getItem("videos") || "[]");
-let canal = localStorage.getItem("canalAtual");
+const supabase=window.supabase.createClient("SUA_URL","SUA_KEY");
+let user=new URLSearchParams(location.search).get("user");
 
-// Carrega dados do canal
-let info = users.find(u => u.username === canal) || {nome: canal, foto: "https://via.placeholder.com/50"};
-document.getElementById("nome").innerText = info.nome;
-document.getElementById("foto").src = info.foto;
+nome.innerText=user;
 
-// Inscrever no canal: adiciona o usuário atual a todos os vídeos deste canal
-document.getElementById("inscreverBtn").onclick = () => {
-  if (!usuario) { alert("Faça login para se inscrever."); return; }
-  videos.forEach(v => {
-    if (v.dono === canal && !v.inscritos.includes(usuario)) {
-      v.inscritos.push(usuario);
-    }
-  });
-  localStorage.setItem("videos", JSON.stringify(videos));
-  alert("Inscrito no canal " + info.nome + "!");
-};
+async function carregar(){
+let {data}=await supabase.from("videos").select("*");
 
-// Lista vídeos do canal
-let lista = document.getElementById("videos");
-videos.filter(v => v.dono === canal).forEach(v => {
-  let idx = videos.indexOf(v);
-  lista.innerHTML += `
-    <div class="video" onclick="abrirVideo(${idx})">
-      <video src="${v.url}" muted></video>
-      <p>${v.titulo}</p>
-    </div>`;
+videos.innerHTML="";
+data.forEach(v=>{
+if(v.dono==user){
+videos.innerHTML+=`<p>${v.titulo}</p>`;
+}
 });
+}
 
-// Navega para reprodução
-window.abrirVideo = (i) => {
-  videos[i].views = (videos[i].views || 0) + 1;
-  localStorage.setItem("videos", JSON.stringify(videos));
-  localStorage.setItem("videoAtual", i);
-  window.location.href = "video.html";
-};
+carregar();
 </script>
-</body>
-</html>
