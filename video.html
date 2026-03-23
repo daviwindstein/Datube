@@ -2,142 +2,94 @@
 <html lang="pt-br">
 <head>
 <meta charset="UTF-8">
-<title>Assistir</title>
+<title>Assistir Vídeo</title>
 <style>
-body{background:#0f0f0f;color:white;font-family:Arial;margin:0;}
-.container{display:flex;flex-wrap:wrap;gap:20px;padding:10px;}
-.video-section{flex:2;min-width:300px;}
-.side{flex:1;min-width:200px;}
-video{width:100%;max-height:500px;border-radius:10px;}
-button{margin:5px;padding:5px;background:red;border:none;color:white;cursor:pointer;}
-#comentarios{background:#181818;padding:10px;border-radius:10px;margin-top:10px;}
-.comentario{border-bottom:1px solid #333;padding:5px 0;}
+body{background:#0f0f0f;color:white;font-family:Arial;}
+video{width:100%;max-height:500px;}
+#comentarios{margin-top:10px;}
 </style>
 </head>
 <body>
 
-<div class="container">
-  <div class="video-section">
-    <video id="player" controls></video>
-    <h2 id="titulo"></h2>
-    <p id="canal" style="cursor:pointer;" onclick="abrirCanal()"></p>
-    <button onclick="inscrever()">Inscrever</button>
-    <button onclick="darLike()">Like (<span id="likeCount">0</span>)</button>
+<h2 id="titulo"></h2>
+<p id="canal"></p>
+<video id="player" controls></video>
+<button onclick="likeVideo()">Curtir ❤️</button>
+<button onclick="inscrever()">Inscrever-se</button>
 
-    <h3>Comentários</h3>
-    <button onclick="comentar()">Comentar</button>
-    <div id="comentarios"></div>
-  </div>
-
-  <div class="side" id="recomendados"></div>
-</div>
+<h3>Comentários</h3>
+<button onclick="comentar()">Comentar</button>
+<div id="comentarios"></div>
 
 <script>
 let db;
+const idVideo = Number(localStorage.getItem("videoAtual"));
+let usuario = localStorage.getItem("usuario");
+
+// --- INDEXEDDB ---
 const request = indexedDB.open("DatuberDB",1);
-request.onsuccess = e=>{
+request.onsuccess = e => {
   db = e.target.result;
   carregarVideo();
 };
 
-let videoId = localStorage.getItem("videoAtual");
-let usuario = localStorage.getItem("usuario");
-
-// --- CARREGAR VIDEO ---
 function carregarVideo(){
-  if(!videoId) return alert("Nenhum vídeo selecionado!");
   const tx = db.transaction(["videos"],"readonly");
   const store = tx.objectStore("videos");
-  const req = store.get(Number(videoId));
+  const req = store.get(idVideo);
   req.onsuccess = e=>{
     const v = e.target.result;
-    if(!v) return alert("Vídeo não encontrado!");
-    document.getElementById("player").src = URL.createObjectURL(new Blob([v.video]));
+    if(!v){alert("Vídeo não encontrado!"); return;}
+    document.getElementById("player").src = v.video;
     document.getElementById("titulo").innerText = v.titulo;
     document.getElementById("canal").innerText = v.dono;
-    document.getElementById("likeCount").innerText = v.likes;
-    carregarComentarios(v);
-    carregarRecomendados(v);
+    renderComentarios(v.comentarios);
   }
 }
 
-// --- COMENTÁRIOS ---
+// --- COMENTARIOS ---
 function comentar(){
   if(!usuario) return alert("Faça login!");
-  const texto = prompt("Comentário:");
-  if(!texto) return;
+  const txt = prompt("Digite seu comentário:");
+  if(!txt) return;
   const tx = db.transaction(["videos"],"readwrite");
   const store = tx.objectStore("videos");
-  const req = store.get(Number(videoId));
+  const req = store.get(idVideo);
   req.onsuccess = e=>{
     const v = e.target.result;
-    v.comentarios.push({usuario,texto});
-    store.put(v);
-    carregarComentarios(v);
+    v.comentarios.push({usuario, texto:txt});
+    const upd = store.put(v);
+    upd.onsuccess = ()=>renderComentarios(v.comentarios);
   }
 }
 
-function carregarComentarios(v){
+function renderComentarios(list){
   const div = document.getElementById("comentarios");
   div.innerHTML="";
-  v.comentarios.forEach(c=>{
-    const p = document.createElement("div");
-    p.className="comentario";
-    p.innerHTML=`<b>${c.usuario}</b>: ${c.texto}`;
-    div.appendChild(p);
+  list.forEach(c=>{
+    div.innerHTML += `<p><b>${c.usuario}:</b> ${c.texto}</p>`;
   });
 }
 
-// --- LIKE ---
-function darLike(){
+// --- LIKES ---
+function likeVideo(){
   if(!usuario) return alert("Faça login!");
   const tx = db.transaction(["videos"],"readwrite");
   const store = tx.objectStore("videos");
-  const req = store.get(Number(videoId));
+  const req = store.get(idVideo);
   req.onsuccess = e=>{
     const v = e.target.result;
-    v.likes = (v.likes||0)+1;
+    v.likes++;
     store.put(v);
-    document.getElementById("likeCount").innerText = v.likes;
+    alert("Curtido! Total: "+v.likes);
   }
 }
 
-// --- INSCRIVER ---
+// --- INSCRITOS ---
 function inscrever(){
   if(!usuario) return alert("Faça login!");
-  alert("Você se inscreveu no canal "+document.getElementById("canal").innerText+"!");
-}
-
-// --- ABRIR CANAL ---
-function abrirCanal(){
-  const dono = document.getElementById("canal").innerText;
-  window.location.href = "canal.html?user="+dono;
-}
-
-// --- RECOMENDADOS ---
-function carregarRecomendados(currentVideo){
-  const div = document.getElementById("recomendados");
-  div.innerHTML="<h3>Recomendados</h3>";
-  const tx = db.transaction(["videos"],"readonly");
-  const store = tx.objectStore("videos");
-  const req = store.openCursor(null,"prev");
-  req.onsuccess = e=>{
-    const cursor = e.target.result;
-    if(cursor){
-      const v = cursor.value;
-      if(v.id != currentVideo.id){
-        const item = document.createElement("div");
-        item.style.cursor="pointer";
-        item.style.marginBottom="10px";
-        item.innerHTML=`<img src="${v.thumb}" style="width:100%"><p>${v.titulo}</p><p>${v.dono}</p>`;
-        item.onclick = ()=>{localStorage.setItem("videoAtual",v.id); location.reload();};
-        div.appendChild(item);
-      }
-      cursor.continue();
-    }
-  }
+  alert("Inscrito no canal de "+document.getElementById("canal").innerText+" ✅");
 }
 </script>
-
 </body>
 </html>
