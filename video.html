@@ -1,87 +1,82 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta charset="UTF-8">
-<title>Assistir</title>
-</head>
+<body style="background:black;color:white;text-align:center;">
 
-<body style="background:#111;color:white;font-family:Arial;">
+<video id="player" controls width="80%"></video>
 
-<div style="max-width:900px;margin:auto;">
+<br><br>
 
-<video id="player" controls style="width:100%"></video>
+<button onclick="like()">👍</button>
+<button onclick="dislike()">👎</button>
+<button onclick="compartilhar()">🔗</button>
 
-<h2 id="titulo"></h2>
-<p id="desc"></p>
+<p id="views"></p>
 
-<button onclick="darLike()">👍 Like (<span id="likes">0</span>)</button>
-<button onclick="telaCheia()">⛶ Tela cheia</button>
-
-<h3>💬 Comentários</h3>
+<h3>Comentários</h3>
 <button onclick="comentar()">Comentar</button>
-
-<div id="comentarios"></div>
-
-</div>
+<div id="com"></div>
 
 <script>
 
-// PEGAR VIDEO
-let id = localStorage.getItem("videoAtual");
-let videos = JSON.parse(localStorage.getItem("videos")) || [];
+let vids = JSON.parse(localStorage.getItem("videos"))||[];
+let i = localStorage.getItem("video");
 
-let v = videos[id];
-
-// 🚨 ERRO
-if(!v){
-document.body.innerHTML = "<h1>Vídeo não encontrado</h1>";
-throw new Error("Sem vídeo");
+if(!vids[i]){
+document.body.innerHTML="Vídeo não encontrado";
 }
 
-// MOSTRAR
+let v = vids[i];
+
 player.src = v.video;
-titulo.innerText = v.titulo;
-desc.innerText = v.desc || "";
-likes.innerText = v.likes || 0;
 
-// 👍 LIKE
-function darLike(){
-v.likes = (v.likes || 0) + 1;
-localStorage.setItem("videos", JSON.stringify(videos));
-likes.innerText = v.likes;
+// VIEW
+v.views++;
+views.innerText = v.views+" views";
+
+// SALVAR
+function salvar(){
+localStorage.setItem("videos",JSON.stringify(vids));
 }
 
-// 💬 COMENTAR
+// LIKE
+function like(){
+v.likes++;
+salvar();
+alert("Like!");
+}
+
+// DISLIKE
+function dislike(){
+v.likes--;
+salvar();
+alert("Dislike!");
+}
+
+// COMENTAR
 function comentar(){
-let texto = prompt("Comentário:");
-
-if(!texto) return;
-
-v.comentarios.push(texto);
-
-localStorage.setItem("videos", JSON.stringify(videos));
-
-carregarComentarios();
+let txt = prompt("Comentário:");
+v.comentarios.push(txt);
+salvar();
+mostrar();
 }
 
-// 🔥 CARREGAR COMENTARIOS
-function carregarComentarios(){
-
-comentarios.innerHTML = "";
-
-(v.comentarios || []).forEach(c=>{
-comentarios.innerHTML += `<p>${c}</p>`;
+// MOSTRAR COMENT
+function mostrar(){
+com.innerHTML="";
+v.comentarios.forEach(c=>{
+com.innerHTML += "<p>"+c+"</p>";
 });
-
 }
 
-// ⛶ FULLSCREEN
-function telaCheia(){
-player.requestFullscreen();
+// COMPARTILHAR
+function compartilhar(){
+let link = location.href;
+navigator.clipboard.writeText(link);
+alert("Link copiado!");
 }
 
-// START
-carregarComentarios();
+mostrar();
+salvar();
 
 </script>
 
