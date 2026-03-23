@@ -1,3 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Datuber</title>
+</head>
+
+<body style="margin:0;background:#111;color:white;font-family:Arial;">
+
+<!-- HEADER -->
+<div style="display:flex;justify-content:space-between;background:#202020;padding:10px;align-items:center;">
+<h2>📺 Datuber</h2>
+
+<input id="pesquisa" placeholder="Pesquisar">
+
+<div style="display:flex;gap:10px;align-items:center;">
+<button onclick="abrirCriar()">➕</button>
+<button onclick="mudarIdioma()">🌐</button>
+<img id="fotoPerfil" onclick="abrirMenu()" style="width:40px;height:40px;border-radius:50%;cursor:pointer;">
+</div>
+</div>
+
+<!-- MENU PERFIL -->
+<div id="menuPerfil" style="display:none;position:absolute;right:10px;background:#222;padding:10px;">
+<p onclick="login()">Login</p>
+<p onclick="mudarFoto()">Foto</p>
+<p onclick="irCanal()">Canal</p>
+<p onclick="irStudio()">Studio</p>
+</div>
+
+<!-- MENU CRIAR -->
+<div id="menuCriar" style="display:none;background:#222;padding:10px;">
+<button onclick="criarVideo()">🎥 Vídeo</button>
+<button onclick="criarShort()">🎬 Shorts</button>
+<button onclick="abrirLive()">🔴 Live</button>
+<button onclick="criarPost()">📝 Postagem</button>
+</div>
+
+<!-- MENU LATERAL -->
+<div style="position:fixed;left:0;top:50%;transform:translateY(-50%);">
+<button onclick="home()">🏠</button><br><br>
+<button onclick="irShorts()">🎬</button><br><br>
+<button onclick="abrirLive()">🔴</button>
+</div>
+
+<hr>
+
+<div id="feed"></div>
+
 <script>
 
 // USER
@@ -50,15 +99,12 @@ function abrirLive(){ location="live.html"; }
 function irShorts(){ location="shorts.html"; }
 function home(){ location.reload(); }
 
-// 🔥 FUNÇÃO BASE (SEMPRE ATUALIZA)
+// BASE
 function getVideos(){
 return JSON.parse(localStorage.getItem("videos")) || [];
 }
-function setVideos(v){
-localStorage.setItem("videos", JSON.stringify(v));
-}
 
-// 🎥 POSTAR VIDEO (FIX)
+// 🎥 VIDEO
 function criarVideo(){
 
 let v = document.createElement("input");
@@ -70,7 +116,6 @@ t.type="file"; t.accept="image/*";
 v.click();
 
 v.onchange=()=>{
-
 if(!v.files[0]) return;
 
 t.click();
@@ -89,7 +134,6 @@ rt.onload=()=>{
 let videos = getVideos();
 
 videos.unshift({
-tipo:"video",
 titulo,
 desc,
 video:rv.result,
@@ -97,10 +141,10 @@ thumb:rt.result,
 dono:user
 });
 
-setVideos(videos);
+localStorage.setItem("videos",JSON.stringify(videos));
 
 alert("Vídeo postado!");
-carregar(); // 🔥 atualiza na hora
+carregar();
 
 }
 
@@ -112,67 +156,38 @@ rv.readAsDataURL(v.files[0]);
 }
 }
 
-// 🎬 SHORTS (FIX)
+// 🎬 SHORTS
 function criarShort(){
 
 let v=document.createElement("input");
 v.type="file"; v.accept="video/*";
 
-let t=document.createElement("input");
-t.type="file"; t.accept="image/*";
-
 v.click();
 
 v.onchange=()=>{
+let r=new FileReader();
 
-if(!v.files[0]) return;
-
-t.click();
-
-t.onchange=()=>{
-
-let titulo = prompt("Título do short:");
-let desc = prompt("Descrição:");
-
-let rv=new FileReader();
-let rt=new FileReader();
-
-rv.onload=()=>{
-rt.onload=()=>{
-
+r.onload=()=>{
 let shorts = JSON.parse(localStorage.getItem("shorts"))||[];
-
-shorts.unshift({
-titulo,
-desc,
-video:rv.result,
-thumb:rt.result
-});
-
+shorts.unshift({video:r.result});
 localStorage.setItem("shorts",JSON.stringify(shorts));
-
 alert("Short postado!");
-
 }
 
-rt.readAsDataURL(t.files[0]);
-}
-rv.readAsDataURL(v.files[0]);
-
-}
+r.readAsDataURL(v.files[0]);
 }
 }
 
 // 📝 POST
 function criarPost(){
-let texto = prompt("Escreva algo:");
+let texto = prompt("Escreva:");
 let posts = JSON.parse(localStorage.getItem("posts"))||[];
 posts.unshift({texto});
 localStorage.setItem("posts",JSON.stringify(posts));
-carregar();
+alert("Post criado!");
 }
 
-// 🔥 FEED (FIX PRINCIPAL)
+// 🔥 FEED
 function carregar(){
 
 let feed = document.getElementById("feed");
@@ -186,7 +201,6 @@ return;
 }
 
 videos.forEach((v,i)=>{
-
 feed.innerHTML += `
 <div onclick="abrirVideo(${i})" style="margin:10px;cursor:pointer;">
 <img src="${v.thumb}" width="250">
@@ -194,22 +208,19 @@ feed.innerHTML += `
 <p>${v.dono}</p>
 </div>
 `;
-
 });
-
 }
 
-// 🔍 PESQUISA (FIX)
+// 🔍 PESQUISA
 document.getElementById("pesquisa").oninput=(e)=>{
-
-let termo = e.target.value.toLowerCase();
+let t=e.target.value.toLowerCase();
 let videos = getVideos();
 let feed = document.getElementById("feed");
 
 feed.innerHTML="";
 
 videos.forEach((v,i)=>{
-if(v.titulo.toLowerCase().includes(termo)){
+if(v.titulo.toLowerCase().includes(t)){
 feed.innerHTML += `
 <div onclick="abrirVideo(${i})">
 <img src="${v.thumb}" width="250">
@@ -218,7 +229,6 @@ feed.innerHTML += `
 `;
 }
 });
-
 }
 
 // ▶ ABRIR VIDEO
@@ -230,7 +240,7 @@ location="video.html";
 // START
 carregar();
 
-</script
+</script>
 
 </body>
 </html>
