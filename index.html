@@ -7,11 +7,29 @@
 
 <body style="background:#111;color:white;font-family:Arial;">
 
-<h1>📺 Datuber</h1>
+<header style="display:flex;justify-content:space-between;background:#202020;padding:10px;">
+
+<h2>📺 Datuber</h2>
+
+<div>
+<img id="fotoPerfil" onclick="abrirMenu()" style="width:40px;height:40px;border-radius:50%;cursor:pointer;">
+</div>
+
+</header>
+
+<!-- MENU -->
+<div id="menu" style="display:none;background:#222;padding:10px;position:absolute;right:10px;">
+<p onclick="login()">👤 Login</p>
+<p onclick="mudarFoto()">🖼️ Mudar foto</p>
+<p onclick="mudarNome()">✏️ Mudar nome</p>
+<p onclick="irCanal()">📺 Meu canal</p>
+</div>
+
+<hr>
 
 <input id="titulo" placeholder="Título"><br><br>
-<input type="file" id="videoFile" accept="video/*"><br><br>
-<input type="file" id="thumbFile" accept="image/*"><br><br>
+<input type="file" id="videoFile"><br><br>
+<input type="file" id="thumbFile"><br><br>
 
 <button onclick="postar()">POSTAR</button>
 
@@ -20,17 +38,65 @@
 
 <script>
 
-// 🔥 BANCO
+// 👤 USUÁRIO
+let user = localStorage.getItem("user") || "Você";
+let foto = localStorage.getItem("foto") || "https://via.placeholder.com/40";
+
+// SET FOTO
+document.getElementById("fotoPerfil").src = foto;
+
+// MENU
+function abrirMenu(){
+let m = document.getElementById("menu");
+m.style.display = m.style.display=="block"?"none":"block";
+}
+
+// LOGIN
+function login(){
+let nome = prompt("Seu nome:");
+localStorage.setItem("user", nome);
+location.reload();
+}
+
+// MUDAR FOTO
+function mudarFoto(){
+let input = document.createElement("input");
+input.type="file";
+
+input.onchange = () => {
+let reader = new FileReader();
+reader.onload = () => {
+localStorage.setItem("foto", reader.result);
+location.reload();
+}
+reader.readAsDataURL(input.files[0]);
+}
+input.click();
+}
+
+// MUDAR NOME
+function mudarNome(){
+let nome = prompt("Novo nome:");
+localStorage.setItem("user", nome);
+location.reload();
+}
+
+// IR CANAL
+function irCanal(){
+window.location.href = "canal.html";
+}
+
+// 🎥 VIDEOS
 let videos = JSON.parse(localStorage.getItem("videos")) || [];
 
-// 🚀 POSTAR
+// POSTAR
 function postar(){
 
-let video = document.getElementById("videoFile").files[0];
-let thumb = document.getElementById("thumbFile").files[0];
+let v = videoFile.files[0];
+let t = thumbFile.files[0];
 let titulo = document.getElementById("titulo").value;
 
-if(!video || !thumb || !titulo){
+if(!v || !t || !titulo){
 alert("Preencha tudo!");
 return;
 }
@@ -42,9 +108,10 @@ rv.onload = () => {
 rt.onload = () => {
 
 videos.unshift({
-titulo: titulo,
+titulo,
 video: rv.result,
-thumb: rt.result
+thumb: rt.result,
+dono: user
 });
 
 localStorage.setItem("videos", JSON.stringify(videos));
@@ -53,35 +120,34 @@ alert("Postado!");
 carregar();
 
 }
-rt.readAsDataURL(thumb);
+rt.readAsDataURL(t);
 }
-rv.readAsDataURL(video);
+rv.readAsDataURL(v);
 }
 
-// 📺 CARREGAR
+// CARREGAR
 function carregar(){
-
-let lista = document.getElementById("videos");
-lista.innerHTML = "";
 
 videos = JSON.parse(localStorage.getItem("videos")) || [];
 
-videos.forEach((v,i)=>{
+let lista = document.getElementById("videos");
+lista.innerHTML="";
 
+videos.forEach((v,i)=>{
 lista.innerHTML += `
-<div onclick="abrir(${i})" style="cursor:pointer;">
+<div onclick="abrir(${i})">
 <img src="${v.thumb}" width="200">
 <p>${v.titulo}</p>
+<p>${v.dono}</p>
 </div>
 `;
-
 });
 }
 
-// ▶️ ABRIR
+// ABRIR VIDEO
 function abrir(i){
 localStorage.setItem("videoAtual", i);
-window.location.href = "video.html";
+window.location.href="video.html";
 }
 
 carregar();
@@ -89,5 +155,4 @@ carregar();
 </script>
 
 </body>
-</html>
 </html>
