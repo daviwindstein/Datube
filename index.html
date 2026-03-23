@@ -10,7 +10,6 @@ body{margin:0;background:#0f0f0f;color:white;font-family:Arial;}
 header{
 display:flex;
 justify-content:space-between;
-align-items:center;
 padding:10px;
 background:#202020;
 }
@@ -29,58 +28,32 @@ border-radius:10px;
 cursor:pointer;
 }
 
-video{width:100%;}
-
-button{background:red;color:white;border:none;padding:5px;margin:2px;cursor:pointer;}
-
-.perfil{
-width:40px;
-height:40px;
-border-radius:50%;
-cursor:pointer;
+.thumb{
+width:100%;
+height:150px;
+object-fit:cover;
+border-radius:10px;
 }
 
-.menu{
-position:absolute;
-right:10px;
-top:60px;
-background:#202020;
-padding:10px;
-display:none;
-}
-
+button{background:red;color:white;border:none;padding:5px;}
 </style>
 </head>
 
 <body>
 
 <header>
-
 <h2>📺 Datuber</h2>
 
 <input id="pesquisa" placeholder="Pesquisar">
 
-<div>
-<button onclick="abrirUpload()">📤</button>
-<button onclick="iniciarLive()">🔴</button>
-
-<!-- FOTO DO CANAL -->
-<img id="fotoPerfil" class="perfil" onclick="abrirMenu()">
-</div>
-
+<button onclick="abrirUpload()">Postar</button>
+<button onclick="irCanal()">Meu Canal</button>
 </header>
-
-<!-- MENU DO PERFIL -->
-<div id="menu" class="menu">
-<p onclick="login()">Login</p>
-<p onclick="mudarFoto()">Mudar foto</p>
-<p onclick="irCanal()">Meu canal</p>
-<p onclick="logout()">Sair</p>
-</div>
 
 <!-- UPLOAD -->
 <div id="uploadBox" style="display:none;padding:10px;">
 <input type="file" id="videoFile" accept="video/*"><br><br>
+<input type="file" id="thumbFile" accept="image/*"><br><br>
 <input id="titulo" placeholder="Título"><br><br>
 <button onclick="postarVideo()">POSTAR</button>
 </div>
@@ -89,84 +62,39 @@ display:none;
 
 <script>
 
-// 👤 USUÁRIO
-let usuario = localStorage.getItem("user") || "Convidado";
-let foto = localStorage.getItem("foto") || "https://via.placeholder.com/40";
-
-// SET FOTO
-document.getElementById("fotoPerfil").src = foto;
-
-// MENU
-window.abrirMenu = () => {
-let m = document.getElementById("menu");
-m.style.display = m.style.display=="block"?"none":"block";
-}
-
-// LOGIN
-window.login = () => {
-let nome = prompt("Nome:");
-localStorage.setItem("user", nome);
-location.reload();
-}
-
-// LOGOUT
-window.logout = () => {
-localStorage.removeItem("user");
-alert("Saiu!");
-location.reload();
-}
-
-// MUDAR FOTO
-window.mudarFoto = () => {
-let input = document.createElement("input");
-input.type="file";
-input.accept="image/*";
-
-input.onchange = () => {
-let reader = new FileReader();
-
-reader.onload = () => {
-localStorage.setItem("foto", reader.result);
-location.reload();
-}
-
-reader.readAsDataURL(input.files[0]);
-}
-
-input.click();
-}
-
-// IR CANAL
-window.irCanal = () => {
-alert("Aqui vai ser seu canal (posso fazer completo depois)");
-}
+let usuario = localStorage.getItem("user") || "Você";
 
 // 🔥 BANCO
 let videos = JSON.parse(localStorage.getItem("videos")) || [];
 
-// UPLOAD
-window.abrirUpload = () => {
+// ABRIR UPLOAD
+function abrirUpload(){
 document.getElementById("uploadBox").style.display="block";
 }
 
-// POSTAR
-window.postarVideo = () => {
+// 🚀 POSTAR (COM THUMBNAIL)
+function postarVideo(){
 
-let file = videoFile.files[0];
+let video = document.getElementById("videoFile").files[0];
+let thumb = document.getElementById("thumbFile").files[0];
 let titulo = document.getElementById("titulo").value;
 
-if(!file || !titulo){
+if(!video || !thumb || !titulo){
 alert("Preencha tudo!");
 return;
 }
 
-let reader = new FileReader();
+let readerVideo = new FileReader();
+let readerThumb = new FileReader();
 
-reader.onload = () => {
+readerVideo.onload = () => {
+
+readerThumb.onload = () => {
 
 videos.unshift({
 titulo,
-url: reader.result,
+video: readerVideo.result,
+thumb: readerThumb.result,
 dono: usuario,
 views:0,
 likes:0,
@@ -179,10 +107,13 @@ alert("Postado!");
 carregarVideos();
 }
 
-reader.readAsDataURL(file);
+readerThumb.readAsDataURL(thumb);
 }
 
-// CARREGAR
+readerVideo.readAsDataURL(video);
+}
+
+// 📺 CARREGAR (AGORA FUNCIONA)
 function carregarVideos(){
 
 let lista = document.getElementById("videos");
@@ -192,18 +123,18 @@ videos.forEach((v,i)=>{
 
 lista.innerHTML+=`
 <div class="video" onclick="abrirVideo(${i})">
-<video src="${v.url}"></video>
+<img class="thumb" src="${v.thumb}">
 <p>${v.titulo}</p>
 <p>${v.dono}</p>
-<p>👁️ ${v.views} ❤️ ${v.likes}</p>
+<p>👁️ ${v.views}</p>
 </div>
 `;
 
 });
 }
 
-// PESQUISA
-pesquisa.oninput = (e)=>{
+// 🔍 PESQUISA
+document.getElementById("pesquisa").oninput = (e)=>{
 let termo = e.target.value.toLowerCase();
 
 let lista = document.getElementById("videos");
@@ -213,47 +144,22 @@ videos.forEach((v,i)=>{
 if(v.titulo.toLowerCase().includes(termo)){
 lista.innerHTML+=`
 <div class="video" onclick="abrirVideo(${i})">
-<video src="${v.url}"></video>
+<img class="thumb" src="${v.thumb}">
 <p>${v.titulo}</p>
 </div>`;
 }
 });
 }
 
-// ABRIR VÍDEO
-window.abrirVideo = (id)=>{
+// ▶️ ABRIR
+function abrirVideo(id){
 localStorage.setItem("videoAtual", id);
 window.location.href="video.html";
 }
 
-// 🔴 LIVE
-window.iniciarLive = async () => {
-
-let stream = await navigator.mediaDevices.getUserMedia({video:true,audio:true});
-
-let nova = window.open("");
-
-nova.document.write(`
-<h2>🔴 AO VIVO</h2>
-<video autoplay id="live"></video>
-
-<input id="msg">
-<button onclick="enviar()">Enviar</button>
-
-<div id="chat"></div>
-
-<script>
-let video = document.getElementById("live");
-video.srcObject = opener.streamRef;
-
-function enviar(){
-let m = document.getElementById("msg").value;
-document.getElementById("chat").innerHTML += "<p>"+m+"</p>";
-}
-<\/script>
-`);
-
-window.streamRef = stream;
+// 👤 CANAL
+function irCanal(){
+window.location.href="canal.html";
 }
 
 carregarVideos();
