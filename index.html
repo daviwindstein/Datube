@@ -49,6 +49,7 @@ button{background:red;color:white;border:none;padding:5px;}
 <button onclick="abrirUpload()">Postar</button>
 <button onclick="irCanal()">Meu Canal</button>
 </header>
+  <button onclick="abrirShorts()">🎬 Shorts</button>
 
 <!-- UPLOAD -->
 <div id="uploadBox" style="display:none;padding:10px;">
@@ -57,6 +58,9 @@ button{background:red;color:white;border:none;padding:5px;}
 <input id="titulo" placeholder="Título"><br><br>
 <button onclick="postarVideo()">POSTAR</button>
 </div>
+  <label>
+<input type="checkbox" id="isShort"> É Short (vídeo curto)
+</label>
 
 <div id="videos"></div>
 
