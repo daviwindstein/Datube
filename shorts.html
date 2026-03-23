@@ -71,6 +71,7 @@ let container = document.getElementById("container");
 
 // 🔥 PEGAR SÓ VÍDEOS CURTOS (até 60s)
 videos.forEach((v,i)=>{
+if(v.isShort){
 
 container.innerHTML += `
 <div class="short">
