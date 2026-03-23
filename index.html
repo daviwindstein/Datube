@@ -8,72 +8,36 @@
 
 <style>
 body{margin:0;background:#0f0f0f;color:white;font-family:Arial;}
-header{
-display:flex;
-align-items:center;
-justify-content:space-between;
-background:#202020;
-padding:10px;
-}
-
-.logo{font-size:20px;font-weight:bold;color:red;}
-
-.search{width:40%;padding:5px;}
-
-#videos{
-display:grid;
-grid-template-columns:repeat(auto-fill,minmax(250px,1fr));
-gap:10px;
-padding:10px;
-}
-
-.video{
-background:#1c1c1c;
-padding:5px;
-border-radius:10px;
-cursor:pointer;
-}
-
-img{width:100%;border-radius:10px;}
-
-.menu{
-position:absolute;
-right:10px;
-top:50px;
-background:#202020;
-display:none;
-padding:10px;
-}
-
-button{background:red;color:white;border:none;padding:5px;margin:2px;}
+header{display:flex;justify-content:space-between;padding:10px;background:#202020;}
+#videos{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;padding:10px;}
+.video{background:#1c1c1c;padding:5px;border-radius:10px;cursor:pointer;}
+img{width:100%;}
+.menu{position:absolute;right:10px;top:50px;background:#202020;display:none;padding:10px;}
+button{background:red;color:white;border:none;padding:5px;}
 </style>
 </head>
 
 <body>
 
 <header>
+<h2>📺 Datuber</h2>
 
-<div class="logo">📺 Datuber</div>
-
-<input id="pesquisa" class="search" placeholder="Pesquisar">
+<input id="pesquisa" placeholder="Pesquisar">
 
 <div>
 <button onclick="abrirCriar()">➕ Criar</button>
 <button onclick="toggleMenu()">👤</button>
 </div>
-
 </header>
 
-<!-- MENU PERFIL -->
 <div id="menu" class="menu">
 <p onclick="login()">Login</p>
 <p onclick="irCanal()">Meu canal</p>
+<p onclick="abrirStudio()">Studio</p>
 <p onclick="logout()">Sair</p>
 </div>
 
-<!-- CRIAR -->
 <div id="criarBox" style="display:none;padding:10px;">
-<h3>Enviar vídeo</h3>
 <input type="file" id="videoFile" accept="video/*"><br><br>
 <input type="file" id="thumbFile" accept="image/*"><br><br>
 <input id="titulo" placeholder="Título"><br><br>
@@ -84,107 +48,103 @@ button{background:red;color:white;border:none;padding:5px;margin:2px;}
 <div id="videos"></div>
 
 <script>
-
 const supabase = window.supabase.createClient("SUA_URL","SUA_KEY");
-
 let usuario = localStorage.getItem("user");
 
 // MENU
 function toggleMenu(){
-let m = document.getElementById("menu");
-m.style.display = m.style.display=="block"?"none":"block";
+let m=document.getElementById("menu");
+m.style.display=m.style.display=="block"?"none":"block";
 }
 
-// LOGIN SIMPLES
+// LOGIN
 function login(){
-let nome = prompt("Digite seu nome:");
+let nome=prompt("Nome:");
 localStorage.setItem("user",nome);
-usuario = nome;
+usuario=nome;
 alert("Logado!");
 }
 
 // LOGOUT
 function logout(){
 localStorage.removeItem("user");
-alert("Saiu!");
+location.reload();
 }
 
-// IR CANAL
+// CANAL
 function irCanal(){
-alert("Em breve canal completo");
+location.href="canal.html?user="+usuario;
 }
 
-// ABRIR CRIAR
+// STUDIO
+function abrirStudio(){
+location.href="studio.html";
+}
+
+// CRIAR
 function abrirCriar(){
 document.getElementById("criarBox").style.display="block";
 }
 
-// 🚀 POSTAR
+// POSTAR
 async function postarVideo(){
+let video=videoFile.files[0];
+let thumb=thumbFile.files[0];
 
-let video = videoFile.files[0];
-let thumb = thumbFile.files[0];
+if(!video||!thumb){alert("Escolhe tudo");return;}
 
-if(!video || !thumb){
-alert("Escolhe vídeo e thumbnail!");
-return;
-}
+let vName=Date.now()+video.name;
+let tName=Date.now()+thumb.name;
 
-let nomeV = Date.now()+video.name;
-let nomeT = Date.now()+thumb.name;
+await supabase.storage.from("videos").upload(vName,video);
+await supabase.storage.from("thumbs").upload(tName,thumb);
 
-await supabase.storage.from("videos").upload(nomeV, video);
-await supabase.storage.from("thumbs").upload(nomeT, thumb);
-
-let vURL = supabase.storage.from("videos").getPublicUrl(nomeV).data.publicUrl;
-let tURL = supabase.storage.from("thumbs").getPublicUrl(nomeT).data.publicUrl;
+let vURL=supabase.storage.from("videos").getPublicUrl(vName).data.publicUrl;
+let tURL=supabase.storage.from("thumbs").getPublicUrl(tName).data.publicUrl;
 
 await supabase.from("videos").insert([{
-titulo: titulo.value,
-descricao: desc.value,
-url: vURL,
-thumb: tURL,
-dono: usuario,
+titulo:titulo.value,
+descricao:desc.value,
+url:vURL,
+thumb:tURL,
+dono:usuario,
 views:0,
 likes:0
 }]);
+
+// 🔔 NOTIFICAÇÃO
+await supabase.from("notificacoes").insert([{texto:usuario+" postou vídeo!"}]);
 
 alert("Postado!");
 carregarVideos();
 }
 
-// 📺 CARREGAR
+// CARREGAR
 async function carregarVideos(){
+let {data}=await supabase.from("videos").select("*");
 
-let { data } = await supabase.from("videos").select("*");
+videos.innerHTML="";
 
-let lista = document.getElementById("videos");
-lista.innerHTML="";
-
-// algoritmo
-data.sort((a,b)=> (b.views+b.likes*2)-(a.views+a.likes*2));
+data.sort((a,b)=>(b.views+b.likes*2)-(a.views+a.likes*2));
 
 data.forEach(v=>{
-lista.innerHTML += `
+videos.innerHTML+=`
 <div class="video" onclick="abrirVideo('${v.id}')">
 <img src="${v.thumb}">
 <p>${v.titulo}</p>
 <p>${v.views} views</p>
-</div>
-`;
+</div>`;
 });
 }
 
-// 🔍 PESQUISA
-pesquisa.oninput = async (e)=>{
-let termo = e.target.value.toLowerCase();
-
-let { data } = await supabase.from("videos").select("*");
+// PESQUISA
+pesquisa.oninput=async(e)=>{
+let t=e.target.value.toLowerCase();
+let {data}=await supabase.from("videos").select("*");
 
 videos.innerHTML="";
-
 data.forEach(v=>{
-if(v.titulo.toLowerCase().includes(termo)){
+if(v.titulo.toLowerCase().includes(t)){
 videos.innerHTML+=`
 <div class="video" onclick="abrirVideo('${v.id}')">
 <img src="${v.thumb}">
@@ -194,13 +154,11 @@ videos.innerHTML+=`
 });
 }
 
-// ▶️
 function abrirVideo(id){
 location.href="video.html?id="+id;
 }
 
 carregarVideos();
-
 </script>
 
 </body>
