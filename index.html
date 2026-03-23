@@ -5,7 +5,7 @@
 <title>Datuber</title>
 </head>
 
-<body style="background:#111;color:white;font-family:Arial;">
+<body style="margin:0;background:#111;color:white;font-family:Arial;">
 
 <!-- HEADER -->
 <div style="display:flex;justify-content:space-between;background:#202020;padding:10px;align-items:center;">
@@ -15,37 +15,39 @@
 <input id="pesquisa" placeholder="Pesquisar">
 
 <div style="display:flex;gap:10px;align-items:center;">
-
-<button onclick="abrirShorts()">🎬</button>
-<button onclick="irStudio()">📊</button>
-<button onclick="irCanal()">📺</button>
+<button onclick="abrirCriar()">➕</button>
 <button onclick="mudarIdioma()">🌐</button>
-
-<img id="fotoPerfil" onclick="menu()" style="width:40px;height:40px;border-radius:50%;cursor:pointer;">
-
-</div>
+<img id="fotoPerfil" onclick="abrirMenu()" style="width:40px;height:40px;border-radius:50%;">
 </div>
 
-<!-- MENU -->
-<div id="menu" style="display:none;background:#222;padding:10px;position:absolute;right:10px;">
+</div>
+
+<!-- MENU PERFIL -->
+<div id="menuPerfil" style="display:none;position:absolute;right:10px;background:#222;padding:10px;">
 <p onclick="login()">Login</p>
-<p onclick="logout()">Sair</p>
 <p onclick="mudarFoto()">Foto</p>
-<p onclick="mudarNome()">Nome</p>
+<p onclick="irCanal()">Canal</p>
+<p onclick="irStudio()">Studio</p>
 </div>
 
-<!-- UPLOAD -->
-<div style="padding:10px;">
-<input id="titulo" placeholder="Título"><br><br>
-<input type="file" id="videoFile"><br><br>
-<input type="file" id="thumbFile"><br><br>
+<!-- MENU CRIAR -->
+<div id="menuCriar" style="display:none;background:#222;padding:10px;">
+<button onclick="postarVideo()">🎥 Vídeo</button>
+<button onclick="criarPost()">📝 Postagem</button>
+<button onclick="abrirLive()">🔴 Live</button>
+<button onclick="postarShort()">🎬 Shorts</button>
+</div>
 
-<button onclick="postar()">📤 Postar</button>
+<!-- MENU LATERAL -->
+<div style="position:fixed;left:0;top:50%;transform:translateY(-50%);">
+<button onclick="home()">🏠</button><br>
+<button onclick="irShorts()">🎬</button><br>
+<button onclick="abrirLive()">🔴</button>
 </div>
 
 <hr>
 
-<div id="videos"></div>
+<div id="feed"></div>
 
 <script>
 
@@ -55,126 +57,142 @@ let foto = localStorage.getItem("foto") || "https://via.placeholder.com/40";
 document.getElementById("fotoPerfil").src = foto;
 
 // MENU
-function menu(){
-let m = document.getElementById("menu");
-m.style.display = m.style.display=="block"?"none":"block";
+function abrirMenu(){
+menuPerfil.style.display = menuPerfil.style.display=="block"?"none":"block";
+}
+function abrirCriar(){
+menuCriar.style.display = menuCriar.style.display=="block"?"none":"block";
 }
 
 // LOGIN
 function login(){
-let nome = prompt("Nome:");
-let senha = prompt("Senha:");
-localStorage.setItem("user", nome);
-localStorage.setItem("senha", senha);
-location.reload();
-}
-
-// LOGOUT
-function logout(){
-localStorage.clear();
+let n = prompt("Nome:");
+localStorage.setItem("user", n);
 location.reload();
 }
 
 // FOTO
 function mudarFoto(){
-let input = document.createElement("input");
-input.type="file";
-
-input.onchange = ()=>{
-let r = new FileReader();
-r.onload = ()=>{
-localStorage.setItem("foto", r.result);
+let i = document.createElement("input");
+i.type="file";
+i.onchange=()=>{
+let r=new FileReader();
+r.onload=()=>{
+localStorage.setItem("foto",r.result);
 location.reload();
 }
-r.readAsDataURL(input.files[0]);
+r.readAsDataURL(i.files[0]);
 }
-input.click();
-}
-
-// NOME
-function mudarNome(){
-let n = prompt("Novo nome:");
-localStorage.setItem("user", n);
-location.reload();
+i.click();
 }
 
 // IDIOMA
 function mudarIdioma(){
-let lang = localStorage.getItem("lang") || "pt";
-lang = lang=="pt"?"en":lang=="en"?"es":"pt";
-localStorage.setItem("lang", lang);
-alert("Idioma: "+lang);
+let l = localStorage.getItem("lang")||"pt";
+l = l=="pt"?"en":l=="en"?"es":"pt";
+localStorage.setItem("lang",l);
+alert(l);
 }
 
-// IR
-function irCanal(){ window.location="canal.html"; }
-function irStudio(){ window.location="studio.html"; }
-function abrirShorts(){ window.location="shorts.html"; }
+// NAVEGAÇÃO
+function irCanal(){ location="canal.html"; }
+function irStudio(){ location="studio.html"; }
+function abrirLive(){ location="live.html"; }
+function irShorts(){ location="shorts.html"; }
+function home(){ location.reload(); }
 
-// VIDEOS
-let videos = JSON.parse(localStorage.getItem("videos")) || [];
+// BASE
+let videos = JSON.parse(localStorage.getItem("videos"))||[];
+let shorts = JSON.parse(localStorage.getItem("shorts"))||[];
+let posts = JSON.parse(localStorage.getItem("posts"))||[];
 
-// POSTAR
-function postar(){
+// 🎥 VIDEO
+function postarVideo(){
+let v = document.createElement("input");
+v.type="file"; v.accept="video/*";
+let t = document.createElement("input");
+t.type="file"; t.accept="image/*";
 
-let v = videoFile.files[0];
-let t = thumbFile.files[0];
-let titulo = document.getElementById("titulo").value;
+v.click();
 
-if(!v || !t || !titulo){ alert("Preencha tudo"); return; }
+v.onchange=()=>{
+t.click();
 
-let rv = new FileReader();
-let rt = new FileReader();
+t.onchange=()=>{
+let titulo = prompt("Título:");
+let rv=new FileReader();
+let rt=new FileReader();
 
-rv.onload = ()=>{
-rt.onload = ()=>{
+rv.onload=()=>{
+rt.onload=()=>{
 
 videos.unshift({
+tipo:"video",
 titulo,
-video: rv.result,
-thumb: rt.result,
-dono: user,
-likes:0,
-views:0
+video:rv.result,
+thumb:rt.result,
+dono:user
 });
 
-localStorage.setItem("videos", JSON.stringify(videos));
-location.reload();
+localStorage.setItem("videos",JSON.stringify(videos));
+carregar();
 
 }
-rt.readAsDataURL(t);
+rt.readAsDataURL(t.files[0]);
 }
-rv.readAsDataURL(v);
+rv.readAsDataURL(v.files[0]);
+}
+}
 }
 
-// CARREGAR
+// 🎬 SHORT
+function postarShort(){
+let v=document.createElement("input");
+v.type="file"; v.accept="video/*";
+
+v.click();
+
+v.onchange=()=>{
+let r=new FileReader();
+r.onload=()=>{
+shorts.unshift({
+tipo:"short",
+video:r.result
+});
+localStorage.setItem("shorts",JSON.stringify(shorts));
+}
+r.readAsDataURL(v.files[0]);
+}
+}
+
+// 📝 POST
+function criarPost(){
+let texto = prompt("Escreva:");
+posts.unshift({tipo:"post",texto});
+localStorage.setItem("posts",JSON.stringify(posts));
+carregar();
+}
+
+// 🔥 FEED (SÓ VIDEOS NA HOME)
 function carregar(){
-
-videos = JSON.parse(localStorage.getItem("videos")) || [];
-
-let lista = document.getElementById("videos");
-lista.innerHTML="";
-
+feed.innerHTML="";
 videos.forEach((v,i)=>{
-lista.innerHTML+=`
-<div onclick="abrir(${i})">
+feed.innerHTML+=`
+<div onclick="abrirVideo(${i})">
 <img src="${v.thumb}" width="200">
 <p>${v.titulo}</p>
-<p>${v.dono}</p>
 </div>`;
 });
 }
 
 // PESQUISA
-pesquisa.oninput = (e)=>{
-let t = e.target.value.toLowerCase();
-let lista = document.getElementById("videos");
-lista.innerHTML="";
-
+pesquisa.oninput=(e)=>{
+let t=e.target.value.toLowerCase();
+feed.innerHTML="";
 videos.forEach((v,i)=>{
 if(v.titulo.toLowerCase().includes(t)){
-lista.innerHTML+=`
-<div onclick="abrir(${i})">
+feed.innerHTML+=`
+<div onclick="abrirVideo(${i})">
 <img src="${v.thumb}" width="200">
 <p>${v.titulo}</p>
 </div>`;
@@ -183,9 +201,9 @@ lista.innerHTML+=`
 }
 
 // ABRIR
-function abrir(i){
-localStorage.setItem("videoAtual", i);
-window.location="video.html";
+function abrirVideo(i){
+localStorage.setItem("videoAtual",i);
+location="video.html";
 }
 
 carregar();
