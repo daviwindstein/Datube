@@ -1,11 +1,13 @@
-<!D<!DOCTYPE html>
+<!DOCTYPE html>
 <html>
 <body style="background:#111;color:white;">
 
 <video id="player" controls width="100%"></video>
 
 <h2 id="titulo"></h2>
-<p id="canal" onclick="irCanal()" style="cursor:pointer;color:cyan;"></p>
+<p id="canal" onclick="irCanal()" style="color:cyan;"></p>
+
+<button onclick="like()">❤️</button>
 
 <script>
 
@@ -18,10 +20,18 @@ player.src = v.video;
 titulo.innerText = v.titulo;
 canal.innerText = v.dono;
 
-// IR CANAL DO VIDEO
+v.views++;
+localStorage.setItem("videos", JSON.stringify(videos));
+
+function like(){
+v.likes++;
+localStorage.setItem("videos", JSON.stringify(videos));
+alert("Like!");
+}
+
 function irCanal(){
 localStorage.setItem("canalAtual", v.dono);
-window.location.href = "canal.html";
+window.location="canal.html";
 }
 
 </script>
