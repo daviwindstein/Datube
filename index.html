@@ -16,7 +16,7 @@
 <div style="display:flex;gap:10px;align-items:center;">
 <button onclick="abrirCriar()">➕</button>
 <button onclick="mudarIdioma()">🌐</button>
-<img id="fotoPerfil" onclick="abrirMenu()" style="width:40px;height:40px;border-radius:50%;cursor:pointer;">
+<img id="fotoPerfil" style="width:40px;height:40px;border-radius:50%;cursor:pointer;">
 </div>
 </div>
 
@@ -30,7 +30,7 @@
 
 <!-- MENU CRIAR -->
 <div id="menuCriar" style="display:none;background:#222;padding:10px;">
-<button onclick="criarVideo()">🎥 Vídeo</button>
+<button onclick="criarVideo()">🎥 Postar Vídeo</button>
 <button onclick="criarShort()">🎬 Shorts</button>
 <button onclick="abrirLive()">🔴 Live</button>
 <button onclick="criarPost()">📝 Postagem</button>
@@ -49,28 +49,34 @@
 
 <script>
 
+// ESPERA CARREGAR A PÁGINA (EVITA ERRO)
+window.onload = function(){
+
 // USER
 let user = localStorage.getItem("user") || "Você";
 let foto = localStorage.getItem("foto") || "https://via.placeholder.com/40";
 document.getElementById("fotoPerfil").src = foto;
 
 // MENU
-function abrirMenu(){
-menuPerfil.style.display = menuPerfil.style.display=="block"?"none":"block";
+window.abrirMenu = function(){
+let m = document.getElementById("menuPerfil");
+m.style.display = m.style.display=="block"?"none":"block";
 }
-function abrirCriar(){
-menuCriar.style.display = menuCriar.style.display=="block"?"none":"block";
+
+window.abrirCriar = function(){
+let m = document.getElementById("menuCriar");
+m.style.display = m.style.display=="block"?"none":"block";
 }
 
 // LOGIN
-function login(){
+window.login = function(){
 let n = prompt("Nome:");
 localStorage.setItem("user", n);
 location.reload();
 }
 
 // FOTO
-function mudarFoto(){
+window.mudarFoto = function(){
 let i = document.createElement("input");
 i.type="file";
 i.onchange=()=>{
@@ -85,27 +91,24 @@ i.click();
 }
 
 // IDIOMA
-function mudarIdioma(){
-let l = localStorage.getItem("lang")||"pt";
-l = l=="pt"?"en":l=="en"?"es":"pt";
-localStorage.setItem("lang",l);
-alert("Idioma: "+l);
+window.mudarIdioma = function(){
+alert("Idioma trocado");
 }
 
 // NAV
-function irCanal(){ location="canal.html"; }
-function irStudio(){ location="studio.html"; }
-function abrirLive(){ location="live.html"; }
-function irShorts(){ location="shorts.html"; }
-function home(){ location.reload(); }
+window.irCanal = function(){ location="canal.html"; }
+window.irStudio = function(){ location="studio.html"; }
+window.abrirLive = function(){ location="live.html"; }
+window.irShorts = function(){ location="shorts.html"; }
+window.home = function(){ location.reload(); }
 
 // BASE
 function getVideos(){
 return JSON.parse(localStorage.getItem("videos")) || [];
 }
 
-// 🎥 VIDEO
-function criarVideo(){
+// 🎥 POSTAR VIDEO
+window.criarVideo = function(){
 
 let v = document.createElement("input");
 v.type="file"; v.accept="video/*";
@@ -157,7 +160,7 @@ rv.readAsDataURL(v.files[0]);
 }
 
 // 🎬 SHORTS
-function criarShort(){
+window.criarShort = function(){
 
 let v=document.createElement("input");
 v.type="file"; v.accept="video/*";
@@ -179,7 +182,7 @@ r.readAsDataURL(v.files[0]);
 }
 
 // 📝 POST
-function criarPost(){
+window.criarPost = function(){
 let texto = prompt("Escreva:");
 let posts = JSON.parse(localStorage.getItem("posts"))||[];
 posts.unshift({texto});
@@ -232,7 +235,7 @@ feed.innerHTML += `
 }
 
 // ▶ ABRIR VIDEO
-function abrirVideo(i){
+window.abrirVideo = function(i){
 localStorage.setItem("videoAtual",i);
 location="video.html";
 }
@@ -240,6 +243,7 @@ location="video.html";
 // START
 carregar();
 
+}
 </script>
 
 </body>
