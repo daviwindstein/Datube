@@ -1,148 +1,194 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-BR">
 <head>
 <meta charset="UTF-8">
 <title>Datuber</title>
+<style>
+  body { margin:0; background:#111; color:white; font-family:Arial; }
+  header, #feed { padding:10px; }
+  header { display:flex; justify-content:space-between; align-items:center; background:#202020; }
+  #feed div { border:1px solid #333; border-radius:5px; padding:5px; margin:5px; cursor:pointer; }
+  #feed div img { width:100%; border-radius:4px; }
+  #feed p { margin:5px 0; }
+  #menuPerfil, #menuCriar {
+    display:none; position:absolute; right:10px; background:#222; padding:10px; color:#ddd; 
+  }
+  #menuPerfil p, #menuCriar button { margin:5px 0; background:#333; border:none; color:white; padding:5px; width:100%; cursor:pointer; }
+  #menuCriar { width:150px; }
+  #menuPerfil { width:150px; }
+  #feed { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:10px; }
+</style>
 </head>
+<body>
 
-<body style="margin:0;background:#111;color:white;font-family:Arial;">
+<header>
+  <h2>📺 Datuber</h2>
+  <input id="pesquisa" placeholder="Pesquisar" style="padding:5px; border-radius:4px; border:1px solid #555;">
+  <div style="display:flex; gap:10px; align-items:center;">
+    <button onclick="abrirCriar()">➕</button>
+    <img id="fotoPerfil" style="width:40px; border-radius:50%; cursor:pointer;">
+  </div>
+</header>
 
-<!-- HEADER -->
-<div style="display:flex;justify-content:space-between;background:#202020;padding:10px;">
-<h2>📺 Datuber</h2>
-
-<input id="pesquisa" placeholder="Pesquisar">
-
-<div>
-<button onclick="abrirCriar()">➕</button>
-<button onclick="irShorts()">🎬</button>
-<button onclick="abrirLive()">🔴</button>
-<img id="foto" style="width:40px;border-radius:50%;cursor:pointer;">
-</div>
-</div>
-
-<!-- MENU PERFIL -->
-<div id="menu" style="display:none;background:#222;position:absolute;right:10px;padding:10px;">
-<p onclick="criarConta()">Criar Conta</p>
-<p onclick="login()">Login</p>
-<p onclick="logout()">Sair</p>
-<p onclick="alert('Canal em breve')">Canal</p>
-<p onclick="alert('Studio em breve')">Studio</p>
+<!-- Menu de perfil -->
+<div id="menuPerfil">
+  <p onclick="criarConta()">Criar Conta</p>
+  <p onclick="fazerLogin()">Login</p>
+  <p onclick="fazerLogout()">Sair</p>
+  <p onclick="abrirCanal()">Ver Canal</p>
+  <p onclick="abrirStudio()">Studio</p>
+  <p onclick="mudarFoto()">Mudar Foto</p>
 </div>
 
-<!-- CRIAR -->
-<div id="criar" style="display:none;background:#222;padding:10px;">
-<button onclick="postarVideo()">🎥 Vídeo</button>
+<!-- Menu Criar -->
+<div id="menuCriar">
+  <button onclick="criarVideo()">🎥 Vídeo</button>
 </div>
 
 <hr>
+
+<!-- Lista de vídeos -->
 <div id="feed"></div>
 
 <script>
+// Carrega foto do perfil
+let usuario = localStorage.getItem("user");
+fotoPerfil.src = localStorage.getItem("foto") || "https://via.placeholder.com/40";
 
-let user = localStorage.getItem("user") || "Você";
-foto.src = localStorage.getItem("foto") || "https://via.placeholder.com/40";
-
-// MENU
-foto.onclick=()=> menu.style.display = menu.style.display=="block"?"none":"block";
-function abrirCriar(){ criar.style.display = criar.style.display=="block"?"none":"block"; }
-
-// LOGIN
-function criarConta(){
-let n = prompt("Nome:");
-localStorage.setItem("user",n);
-location.reload();
+// Abre/fecha menus
+window.abrirMenu = () => {
+  let menu = document.getElementById("menuPerfil");
+  menu.style.display = (menu.style.display=="block" ? "none" : "block");
 }
-function login(){
-let n = prompt("Nome:");
-localStorage.setItem("user",n);
-location.reload();
-}
-function logout(){
-localStorage.removeItem("user");
-location.reload();
+window.abrirCriar = () => {
+  let menu = document.getElementById("menuCriar");
+  menu.style.display = (menu.style.display=="block" ? "none" : "block");
 }
 
-// BASE
+// Contas de usuário
+window.criarConta = () => {
+  let n = prompt("Usuário:");
+  if(n) {
+    localStorage.setItem("user", n);
+    alert("Conta criada!");
+    location.reload();
+  }
+}
+window.fazerLogin = () => {
+  let n = prompt("Usuário:");
+  let user = localStorage.getItem("user");
+  if(n===user) { alert("Logado!"); location.reload(); }
+  else alert("Usuário não encontrado.");
+}
+window.fazerLogout = () => {
+  localStorage.removeItem("user");
+  alert("Saiu.");
+  location.reload();
+}
+
+// Navegação (exemplo)
+window.abrirCanal = () => { location.href="canal.html"; }
+window.abrirStudio = () => { location.href="studio.html"; }
+
+// Armazena/recupera vídeos
 function getVideos(){
-return JSON.parse(localStorage.getItem("videos"))||[];
+  return JSON.parse(localStorage.getItem("videos")) || [];
+}
+function setVideos(videos) {
+  localStorage.setItem("videos", JSON.stringify(videos));
 }
 
-// POSTAR VIDEO
-function postarVideo(){
+// Upload de vídeo: FileReader para video e thumb (base64)【42†L282-L289】
+window.criarVideo = () => {
+  if(!usuario) { alert("Faça login antes de postar."); return; }
+  let vInput = document.createElement("input");
+  vInput.type="file"; vInput.accept="video/*";
+  let tInput = document.createElement("input");
+  tInput.type="file"; tInput.accept="image/*";
 
-let v=document.createElement("input");
-v.type="file"; v.accept="video/*";
-
-let t=document.createElement("input");
-t.type="file"; t.accept="image/*";
-
-v.click();
-
-v.onchange=()=>{
-t.click();
-
-t.onchange=()=>{
-
-let titulo=prompt("Título:");
-let desc=prompt("Descrição:");
-
-let rv=new FileReader();
-let rt=new FileReader();
-
-rv.onload=()=>{
-rt.onload=()=>{
-
-let vids=getVideos();
-
-vids.unshift({
-titulo,
-desc,
-video:rv.result,
-thumb:rt.result,
-likes:0,
-views:0,
-comentarios:[]
-});
-
-localStorage.setItem("videos",JSON.stringify(vids));
-carregar();
-
+  vInput.click();
+  vInput.onchange = () => {
+    if(!vInput.files[0]) return;
+    tInput.click();
+    tInput.onchange = () => {
+      let titulo = prompt("Título:");
+      let desc = prompt("Descrição:");
+      let readerV = new FileReader();
+      let readerT = new FileReader();
+      readerV.onload = () => {
+        readerT.onload = () => {
+          let videos = getVideos();
+          videos.unshift({
+            titulo: titulo,
+            desc: desc,
+            video: readerV.result,
+            thumb: readerT.result,
+            dono: usuario,
+            likes: 0,
+            dislikes: 0,
+            views: 0,
+            comentarios: [],
+            inscritos: []
+          });
+          setVideos(videos);
+          alert("Vídeo postado!");
+          carregar();
+        }
+        readerT.readAsDataURL(tInput.files[0]);
+      }
+      readerV.readAsDataURL(vInput.files[0]);
+    }
+  }
 }
 
-rt.readAsDataURL(t.files[0]);
-}
-rv.readAsDataURL(v.files[0]);
-
-}
-}
-}
-
-// FEED
+// Carrega vídeos na página inicial
 function carregar(){
-
-let vids=getVideos();
-feed.innerHTML="";
-
-vids.forEach((v,i)=>{
-feed.innerHTML+=`
+  let feed = document.getElementById("feed");
+  let lista = getVideos();
+  feed.innerHTML = "";
+  if(lista.length === 0){
+    feed.innerHTML = "<p>Nenhum vídeo.</p>";
+    return;
+  }
+  lista.forEach((v,i) => {
+    feed.innerHTML += `
 <div onclick="abrirVideo(${i})">
-<img src="${v.thumb}" width="250">
-<p>${v.titulo}</p>
-<p>${v.views} views</p>
-</div>
-`;
-});
+  <img src="${v.thumb}">
+  <p><b>${v.titulo}</b></p>
+  <p>${v.dono}</p>
+  <p>${v.views} views</p>
+</div>`;
+  });
+}
+window.carregar = carregar;
+
+// Pesquisa por título em tempo real
+document.getElementById("pesquisa").oninput = (e) => {
+  let termo = e.target.value.toLowerCase();
+  let lista = getVideos();
+  let feed = document.getElementById("feed");
+  feed.innerHTML = "";
+  lista.forEach((v,i) => {
+    if(v.titulo.toLowerCase().includes(termo)){
+      feed.innerHTML += `
+<div onclick="abrirVideo(${i})">
+  <img src="${v.thumb}">
+  <p>${v.titulo}</p>
+</div>`;
+    }
+  });
 }
 
-// ABRIR VIDEO
-function abrirVideo(i){
-localStorage.setItem("video",i);
-location="video.html";
+// Abre página do vídeo
+window.abrirVideo = (i) => {
+  localStorage.setItem("videoAtual", i);
+  location.href = "video.html";
 }
 
+// Inicializa
 carregar();
 
 </script>
 </body>
 </html>
+
