@@ -1,44 +1,39 @@
 <!DOCTYPE html>
 <html>
-<body style="background:#0f0f0f;color:white;font-family:Arial;">
+<body style="background:#111;color:white;">
 
-<h1>📊 Studio</h1>
+<h1>Studio</h1>
 
 <div id="videos"></div>
-
-<script src="app.js"></script>
 
 <script>
 
 let user = localStorage.getItem("user");
-let div = document.getElementById("videos");
+let lista = document.getElementById("videos");
+let videos = JSON.parse(localStorage.getItem("videos")) || [];
 
 videos.forEach((v,i)=>{
-if(v.dono === user){
-
-div.innerHTML+=`
+if(v.dono===user){
+lista.innerHTML+=`
 <div>
 <img src="${v.thumb}" width="200">
 <p>${v.titulo}</p>
-
-<button onclick="editar(${i})">✏️</button>
-<button onclick="deletar(${i})">🗑️</button>
-
-</div>
-`;
+<button onclick="edit(${i})">✏️</button>
+<button onclick="del(${i})">🗑️</button>
+</div>`;
 }
 });
 
-function editar(i){
+function edit(i){
 let n = prompt("Novo título:");
-videos[i].titulo = n;
-salvar();
+videos[i].titulo=n;
+localStorage.setItem("videos", JSON.stringify(videos));
 location.reload();
 }
 
-function deletar(i){
+function del(i){
 videos.splice(i,1);
-salvar();
+localStorage.setItem("videos", JSON.stringify(videos));
 location.reload();
 }
 
