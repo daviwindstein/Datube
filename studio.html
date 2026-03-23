@@ -1,171 +1,47 @@
 <!DOCTYPE html>
-<html lang="pt-br">
-<head>
-<meta charset="UTF-8">
-<title>Datuber Studio</title>
+<html>
+<body style="background:#0f0f0f;color:white;font-family:Arial;">
 
-<style>
-body{background:#0f0f0f;color:white;font-family:Arial;margin:0;}
+<h1>📊 Studio</h1>
 
-header{
-background:#202020;
-padding:10px;
-display:flex;
-justify-content:space-between;
-}
-
-#painel{
-padding:10px;
-display:flex;
-gap:20px;
-}
-
-.card{
-background:#1c1c1c;
-padding:10px;
-border-radius:10px;
-}
-
-#videos{
-padding:10px;
-}
-
-.video{
-background:#1c1c1c;
-margin:10px 0;
-padding:10px;
-border-radius:10px;
-}
-
-button{
-background:red;
-color:white;
-border:none;
-padding:5px;
-margin:2px;
-cursor:pointer;
-}
-</style>
-</head>
-
-<body>
-
-<header>
-<h2>📊 Datuber Studio</h2>
-<button onclick="voltar()">⬅ Voltar</button>
-</header>
-
-<!-- 📊 PAINEL -->
-<div id="painel">
-<div class="card">
-<p>👁️ Views</p>
-<h2 id="views"></h2>
-</div>
-
-<div class="card">
-<p>🎥 Vídeos</p>
-<h2 id="qtd"></h2>
-</div>
-
-<div class="card">
-<p>❤️ Likes</p>
-<h2 id="likes"></h2>
-</div>
-</div>
-
-<!-- 🎥 LISTA -->
 <div id="videos"></div>
+
+<script src="app.js"></script>
 
 <script>
 
-// 👤 usuário
-let usuario = localStorage.getItem("user") || "Você";
-
-// 🎥 vídeos
-let lista = JSON.parse(localStorage.getItem("videos")) || [];
-
-// 📊 contadores
-let totalViews = 0;
-let totalLikes = 0;
-let totalVideos = 0;
-
+let user = localStorage.getItem("user");
 let div = document.getElementById("videos");
 
-// 🔥 CARREGAR
-function carregar(){
+videos.forEach((v,i)=>{
+if(v.dono === user){
 
-div.innerHTML="";
-
-lista.forEach((v,i)=>{
-
-if(v.dono === usuario){
-
-totalViews += v.views;
-totalLikes += v.likes;
-totalVideos++;
-
-div.innerHTML += `
-<div class="video">
-
+div.innerHTML+=`
+<div>
 <img src="${v.thumb}" width="200">
+<p>${v.titulo}</p>
 
-<p><b>${v.titulo}</b></p>
-
-<p>👁️ ${v.views} | ❤️ ${v.likes}</p>
-
-<button onclick="editar(${i})">✏️ Editar</button>
-<button onclick="deletar(${i})">🗑️ Deletar</button>
+<button onclick="editar(${i})">✏️</button>
+<button onclick="deletar(${i})">🗑️</button>
 
 </div>
 `;
-
 }
 });
 
-// atualizar painel
-document.getElementById("views").innerText = totalViews;
-document.getElementById("likes").innerText = totalLikes;
-document.getElementById("qtd").innerText = totalVideos;
-
-}
-
-// ✏️ EDITAR
 function editar(i){
-
-let novo = prompt("Novo título:", lista[i].titulo);
-
-if(novo){
-lista[i].titulo = novo;
-localStorage.setItem("videos", JSON.stringify(lista));
+let n = prompt("Novo título:");
+videos[i].titulo = n;
+salvar();
 location.reload();
 }
 
-}
-
-// 🗑️ DELETAR
 function deletar(i){
-
-if(confirm("Apagar vídeo?")){
-lista.splice(i,1);
-localStorage.setItem("videos", JSON.stringify(lista));
+videos.splice(i,1);
+salvar();
 location.reload();
 }
 
-}
-
-// 🔙 VOLTAR
-function voltar(){
-window.location.href = "index.html";
-}
-
-carregar();
-
-  <button onclick="abrirStudio()">Studio</button>
-  <p onclick="abrirStudio()">📊 Studio</p>
-
-  function abrirStudio(){
-window.location.href = "studio.html";
-}
 </script>
 
 </body>
