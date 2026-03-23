@@ -211,6 +211,10 @@ feed.innerHTML = "<p>Nenhum vídeo encontrado</p>";
 return;
 }
 
+  feed.innerHTML+= `
+<div ...
+`;
+  
 videos.forEach((v,i)=>{
 feed.innerHTML += `
 <div onclick="abrirVideo(${i})" style="margin:10px;cursor:pointer;">
