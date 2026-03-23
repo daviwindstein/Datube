@@ -149,7 +149,13 @@ dono:user
 localStorage.setItem("videos",JSON.stringify(videos));
 
 alert("Vídeo postado!");
-carregar();
+carregar()
+  function carregar(){
+
+let feed = document.getElementById("feed");
+let videos = getVideos();
+
+feed.innerHTML="";;
 
 }
 
