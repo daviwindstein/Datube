@@ -1,83 +1,79 @@
 <!DOCTYPE html>
-<html>
-<body style="background:black;color:white;text-align:center;">
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Assistir Vídeo</title>
+<style> body{ background:#111; color:white; font-family:Arial; text-align:center; } video { width:80%; margin-top:20px; } button{ margin:5px; padding:5px 10px; }</style>
+</head>
+<body>
 
-<video id="player" controls width="80%"></video>
-
-<br><br>
-
-<button onclick="like()">👍</button>
-<button onclick="dislike()">👎</button>
-<button onclick="compartilhar()">🔗</button>
-
+<video id="player" controls></video>
+<div>
+  <button onclick="darLike()">👍 Like (<span id="likeCount">0</span>)</button>
+  <button onclick="darDislike()">👎 Dislike (<span id="dislikeCount">0</span>)</button>
+  <button onclick="compartilhar()">🔗 Compartilhar</button>
+</div>
 <p id="views"></p>
 
 <h3>Comentários</h3>
-<button onclick="comentar()">Comentar</button>
-<div id="com"></div>
+<button onclick="comentar()">Adicionar</button>
+<div id="comentarios"></div>
 
 <script>
-
-let vids = JSON.parse(localStorage.getItem("videos"))||[];
-let i = localStorage.getItem("video");
-
-if(!vids[i]){
-document.body.innerHTML="Vídeo não encontrado";
+// Carrega vídeo atual
+let videos = JSON.parse(localStorage.getItem("videos"))||[];
+let idx = parseInt(localStorage.getItem("videoAtual"));
+if(videos[idx]){
+  player.src = videos[idx].video;
+  titulo = videos[idx].titulo;
+  // Atualiza contador de views
+  videos[idx].views = (videos[idx].views || 0) + 1;
+  document.getElementById("views").innerText = videos[idx].views + " views";
+  localStorage.setItem("videos", JSON.stringify(videos));
+} else {
+  document.body.innerHTML = "<p>Vídeo não encontrado</p>";
 }
 
-let v = vids[i];
-
-player.src = v.video;
-
-// VIEW
-v.views++;
-views.innerText = v.views+" views";
-
-// SALVAR
-function salvar(){
-localStorage.setItem("videos",JSON.stringify(vids));
+// Like / Dislike (1 por usuário simulado)
+function darLike(){
+  let v = videos[idx];
+  v.likes = (v.likes||0) + 1;
+  document.getElementById("likeCount").innerText = v.likes;
+  localStorage.setItem("videos", JSON.stringify(videos));
+}
+function darDislike(){
+  let v = videos[idx];
+  v.dislikes = (v.dislikes||0) + 1;
+  document.getElementById("dislikeCount").innerText = v.dislikes;
+  localStorage.setItem("videos", JSON.stringify(videos));
 }
 
-// LIKE
-function like(){
-v.likes++;
-salvar();
-alert("Like!");
-}
-
-// DISLIKE
-function dislike(){
-v.likes--;
-salvar();
-alert("Dislike!");
-}
-
-// COMENTAR
-function comentar(){
-let txt = prompt("Comentário:");
-v.comentarios.push(txt);
-salvar();
-mostrar();
-}
-
-// MOSTRAR COMENT
-function mostrar(){
-com.innerHTML="";
-v.comentarios.forEach(c=>{
-com.innerHTML += "<p>"+c+"</p>";
-});
-}
-
-// COMPARTILHAR
+// Compartilhar link
 function compartilhar(){
-let link = location.href;
-navigator.clipboard.writeText(link);
-alert("Link copiado!");
+  let url = location.href;
+  navigator.clipboard.writeText(url);
+  alert("Link copiado!");
 }
 
-mostrar();
-salvar();
-
+// Comentários
+function comentar(){
+  let text = prompt("Comentário:");
+  if(!text) return;
+  let v = videos[idx];
+  v.comentarios = v.comentarios || [];
+  v.comentarios.push(text);
+  localStorage.setItem("videos", JSON.stringify(videos));
+  mostrarComentarios();
+}
+function mostrarComentarios(){
+  let div = document.getElementById("comentarios");
+  div.innerHTML = "";
+  let v = videos[idx];
+  (v.comentarios || []).forEach(c => {
+    div.innerHTML += `<p>${c}</p>`;
+  });
+}
+mostrarComentarios();
 </script>
 
 </body>
