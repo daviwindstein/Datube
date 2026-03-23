@@ -10,6 +10,11 @@ body{
   background:#0f0f0f;
   color:white;
 }
+  const SUPABASE_URL = "SUA_URL_AQUI";
+const SUPABASE_KEY = "SUA_KEY_AQUI";
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
 
 /* HEADER */
 header{
@@ -21,6 +26,10 @@ header{
   background:#202020;
 }
   <link rel="manifest" href="manifest.json">
+
+  <input type="file" id="videoInput" accept="video/*">
+<input type="file" id="thumbInput" accept="image/*">
+<button onclick="uploadVideo()">Postar</button>
 
 /* INPUT E BOTÕES GRANDES */
 input, button{
@@ -154,45 +163,63 @@ function fazerLogin(){
   }
 }
 
-// --- UPLOAD ---
-function uploadVideo(){
+async function uploadVideo(){
   if(!usuario) return alert("Faça login!");
+
   const videoFile = document.getElementById("videoInput").files[0];
   const thumbFile = document.getElementById("thumbInput").files[0];
-  if(!videoFile || !thumbFile) return alert("Escolha vídeo e thumbnail!");
-  const titulo = prompt("Título do vídeo:");
-  if(!titulo) return alert("Necessário título!");
-  if(videoFile.size>3e9) return alert("Máximo 1 hora de vídeo!");
 
-  const readerVideo = new FileReader();
-  const readerThumb = new FileReader();
-
-  readerVideo.onload = ()=>{
-    const videoData = readerVideo.result;
-    readerThumb.onload = ()=>{
-      const thumbData = readerThumb.result;
-      const tx = db.transaction(["videos"],"readwrite");
-      const store = tx.objectStore("videos");
-      const addReq = store.add({
-        titulo,
-        video: videoData,
-        thumb: thumbData,
-        dono: usuario,
-        data: Date.now(),
-        likes:0,
-        comentarios:[]
-      });
-      addReq.onsuccess = e=>{
-        carregarVideos(); // Atualiza a página
-        alert("Vídeo postado com sucesso!");
-      };
-    }
-    readerThumb.readAsDataURL(thumbFile);
+  if(!videoFile || !thumbFile){
+    return alert("Escolha vídeo e thumbnail!");
   }
-  readerVideo.readAsDataURL(videoFile); // 🔥 Use readAsDataURL para o video carregar
-}
-  addReq.onsuccess = () => {
-  carregarVideos(); // 🔥 atualiza na hora
+
+  const titulo = prompt("Título do vídeo:");
+  if(!titulo) return;
+
+  // 🔥 NOME ÚNICO
+  const videoName = Date.now() + "_" + videoFile.name;
+  const thumbName = Date.now() + "_" + thumbFile.name;
+
+  // 🔥 UPLOAD DO VÍDEO
+  let { error: videoError } = await supabase.storage
+    .from("videos")
+    .upload(videoName, videoFile);
+
+  if(videoError){
+    alert("Erro ao enviar vídeo");
+    console.log(videoError);
+    return;
+  }
+
+  // 🔥 UPLOAD DA THUMB
+  let { error: thumbError } = await supabase.storage
+    .from("thumbs")
+    .upload(thumbName, thumbFile);
+
+  if(thumbError){
+    alert("Erro na thumbnail");
+    console.log(thumbError);
+    return;
+  }
+
+  // 🔥 PEGAR URL
+  const videoURL = supabase.storage.from("videos").getPublicUrl(videoName).data.publicUrl;
+  const thumbURL = supabase.storage.from("thumbs").getPublicUrl(thumbName).data.publicUrl;
+
+  // 🔥 SALVAR NO BANCO
+  await supabase.from("videos").insert([
+    {
+      titulo,
+      url: videoURL,
+      thumb: thumbURL,
+      dono: usuario,
+      likes: 0,
+      views: 0
+    }
+  ]);
+
+  alert("Vídeo postado!");
+  carregarVideos();
 }
 
 // --- CARREGAR VÍDEOS ---
@@ -255,6 +282,7 @@ document.getElementById("pesquisa").oninput = e=>{
   if("serviceWorker" in navigator){
   navigator.serviceWorker.register("service-worker.js");
 }
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </script>
 </body>
 </html>
