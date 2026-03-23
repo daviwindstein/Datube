@@ -1,34 +1,68 @@
 <!DOCTYPE html>
-<html>
-<body style="background:#111;color:white;">
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Canal</title>
+<style> body{background:#111;color:white;font-family:Arial;} #cabecalho{display:flex;gap:10px;align-items:center;} #cabecalho img{width:80px;border-radius:50%;} #videos{margin-top:10px;} #videos div{margin:10px;cursor:pointer;} #videos img{width:200px;} button{margin:5px;padding:5px 10px;} </style>
+</head>
+<body>
 
-<h1 id="nome"></h1>
+<div id="cabecalho">
+  <img id="fotoCanal" src="https://via.placeholder.com/80">
+  <div>
+    <h2 id="nomeCanal">Nome do Canal</h2>
+    <p id="info"></p>
+    <button id="btnInscrever">Inscrever-se</button>
+  </div>
+</div>
+
+<hr>
 
 <div id="videos"></div>
 
 <script>
-
-let user = localStorage.getItem("canalAtual") || localStorage.getItem("user");
-document.getElementById("nome").innerText = user;
-
-let lista = document.getElementById("videos");
-let videos = JSON.parse(localStorage.getItem("videos")) || [];
-
-videos.forEach((v,i)=>{
-if(v.dono===user){
-lista.innerHTML+=`
-<div onclick="abrir(${i})">
-<img src="${v.thumb}" width="200">
-<p>${v.titulo}</p>
-</div>`;
+let usuario = localStorage.getItem("user");
+if(!usuario) {
+  alert("Faça login!");
+  location.href = "index.html";
 }
+let users = JSON.parse(localStorage.getItem("users")) || [];
+// Exibir canal (para simplicidade, usamos o mesmo usuário como canal)
+document.getElementById("nomeCanal").innerText = usuario;
+document.getElementById("fotoCanal").src = localStorage.getItem("foto") || "https://via.placeholder.com/80";
+
+// Vídeos do canal
+let videos = JSON.parse(localStorage.getItem("videos")) || [];
+let canalVideos = videos.filter(v => v.dono === usuario);
+let vidsDiv = document.getElementById("videos");
+canalVideos.forEach((v,i) => {
+  // calcula índice global
+  let idx = videos.indexOf(v);
+  vidsDiv.innerHTML += `
+    <div onclick="abrirVideo(${idx})">
+      <img src="${v.thumb}">
+      <p>${v.titulo}</p>
+    </div>`;
 });
 
-function abrir(i){
-localStorage.setItem("videoAtual", i);
-window.location="video.html";
+// Inscrever (simples contador)
+let inscr = JSON.parse(localStorage.getItem("inscritos")) || [];
+if(inscr.includes(usuario)){
+  document.getElementById("info").innerText = inscr.length + " inscritos";
+} else {
+  document.getElementById("info").innerText = inscr.length + " inscritos";
 }
+document.getElementById("btnInscrever").onclick = () => {
+  if(!inscr.includes(usuario)){
+    inscr.push(usuario);
+    localStorage.setItem("inscritos", JSON.stringify(inscr));
+    alert("Inscrito!");
+    location.reload();
+  }
+};
 
+// Reuso função abrirVideo
+function abrirVideo(i){ localStorage.setItem("videoAtual",i); location="video.html"; }
 </script>
 
 </body>
