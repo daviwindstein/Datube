@@ -1,38 +1,87 @@
 <!DOCTYPE html>
 <html>
-<body style="background:#111;color:white;">
+<head>
+<meta charset="UTF-8">
+<title>Assistir</title>
+</head>
 
-<video id="player" controls width="100%"></video>
+<body style="background:#111;color:white;font-family:Arial;">
+
+<div style="max-width:900px;margin:auto;">
+
+<video id="player" controls style="width:100%"></video>
 
 <h2 id="titulo"></h2>
-<p id="canal" onclick="irCanal()" style="color:cyan;"></p>
+<p id="desc"></p>
 
-<button onclick="like()">❤️</button>
+<button onclick="darLike()">👍 Like (<span id="likes">0</span>)</button>
+<button onclick="telaCheia()">⛶ Tela cheia</button>
+
+<h3>💬 Comentários</h3>
+<button onclick="comentar()">Comentar</button>
+
+<div id="comentarios"></div>
+
+</div>
 
 <script>
 
-let videos = JSON.parse(localStorage.getItem("videos")) || [];
+// PEGAR VIDEO
 let id = localStorage.getItem("videoAtual");
+let videos = JSON.parse(localStorage.getItem("videos")) || [];
 
 let v = videos[id];
 
+// 🚨 ERRO
+if(!v){
+document.body.innerHTML = "<h1>Vídeo não encontrado</h1>";
+throw new Error("Sem vídeo");
+}
+
+// MOSTRAR
 player.src = v.video;
 titulo.innerText = v.titulo;
-canal.innerText = v.dono;
+desc.innerText = v.desc || "";
+likes.innerText = v.likes || 0;
 
-v.views++;
+// 👍 LIKE
+function darLike(){
+v.likes = (v.likes || 0) + 1;
 localStorage.setItem("videos", JSON.stringify(videos));
-
-function like(){
-v.likes++;
-localStorage.setItem("videos", JSON.stringify(videos));
-alert("Like!");
+likes.innerText = v.likes;
 }
 
-function irCanal(){
-localStorage.setItem("canalAtual", v.dono);
-window.location="canal.html";
+// 💬 COMENTAR
+function comentar(){
+let texto = prompt("Comentário:");
+
+if(!texto) return;
+
+v.comentarios.push(texto);
+
+localStorage.setItem("videos", JSON.stringify(videos));
+
+carregarComentarios();
 }
+
+// 🔥 CARREGAR COMENTARIOS
+function carregarComentarios(){
+
+comentarios.innerHTML = "";
+
+(v.comentarios || []).forEach(c=>{
+comentarios.innerHTML += `<p>${c}</p>`;
+});
+
+}
+
+// ⛶ FULLSCREEN
+function telaCheia(){
+player.requestFullscreen();
+}
+
+// START
+carregarComentarios();
 
 </script>
 
