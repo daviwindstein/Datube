@@ -8,6 +8,14 @@
 body{margin:0;background:#0f0f0f;color:white;font-family:Arial;}
 
 header{
+  <div id="uploadBox" style="display:none;padding:10px;">
+<input type="file" id="videoFile" accept="video/*"><br><br>
+<input type="file" id="thumbFile" accept="image/*"><br><br>
+<input id="titulo" placeholder="Título"><br><br>
+<button onclick="postarVideo()">POSTAR</button>
+</div>
+
+<div id="videos"></div>
 <div style="display:flex;align-items:center;gap:10px;">
 
 <button onclick="abrirUpload()">📤</button>
