@@ -4,14 +4,14 @@
 <meta charset="UTF-8">
 <title>Datuber</title>
 <style>
-body{margin:0;font-family:Arial;background:#0f0f0f;color:white;}
-header{display:flex;justify-content:space-between;align-items:center;padding:10px;background:#202020;}
-input,button{padding:5px;margin:2px;}
-#videos{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;padding:10px;}
-.video{cursor:pointer;background:#181818;padding:5px;border-radius:10px;}
-.video img{width:100%;border-radius:10px;}
-.login-box{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);
-background:#202020;padding:20px;display:none;flex-direction:column;}
+body { margin:0; font-family:Arial; background:#0f0f0f; color:white; }
+header { display:flex; justify-content:space-between; align-items:center; padding:10px; background:#202020; }
+input, button { padding:5px; margin:2px; }
+#videos { display:grid; grid-template-columns:repeat(auto-fill,minmax(250px,1fr)); gap:10px; padding:10px; }
+.video { cursor:pointer; background:#181818; padding:5px; border-radius:10px; }
+.video img { width:100%; border-radius:10px; }
+.login-box { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%);
+background:#202020; padding:20px; display:none; flex-direction:column; }
 </style>
 </head>
 <body>
@@ -46,12 +46,12 @@ let usuario = localStorage.getItem("usuario");
 
 // --- INDEXEDDB ---
 const request = indexedDB.open("DatuberDB",1);
-request.onupgradeneeded = e=>{
+request.onupgradeneeded = e => {
   db = e.target.result;
-  if(!db.objectStoreNames.contains("videos")) db.createObjectStore("videos",{keyPath:"id",autoIncrement:true});
+  if(!db.objectStoreNames.contains("videos")) db.createObjectStore("videos",{keyPath:"id", autoIncrement:true});
   if(!db.objectStoreNames.contains("usuarios")) db.createObjectStore("usuarios",{keyPath:"username"});
 };
-request.onsuccess = e=>{
+request.onsuccess = e => {
   db = e.target.result;
   carregarVideos();
 };
@@ -123,15 +123,13 @@ function uploadVideo(){
         comentarios:[]
       });
       addReq.onsuccess = e=>{
-        const id = e.target.result; // id correto gerado pelo IndexedDB
         carregarVideos(); // Atualiza a página
         alert("Vídeo postado com sucesso!");
-        localStorage.setItem("videoAtual",id); // já define o vídeo atual para abrir
       };
     }
     readerThumb.readAsDataURL(thumbFile);
   }
-  readerVideo.readAsArrayBuffer(videoFile);
+  readerVideo.readAsDataURL(videoFile); // 🔥 Use readAsDataURL para o video carregar
 }
 
 // --- CARREGAR VÍDEOS ---
