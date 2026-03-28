@@ -1,162 +1,154 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Datuber - Início</title>
-<style>
-body{margin:0;background:#111;color:#ddd;font-family:Arial;}
-header{display:flex;justify-content:space-between;align-items:center;padding:10px;background:#202020;}
-#feed{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:10px;padding:10px;}
-.videoCard{cursor:pointer;border:1px solid #333;padding:5px;}
-.videoCard img{width:100%;border-radius:4px;}
-#menuCriar,#menuPerfil{position:absolute;top:50px;right:10px;background:#222;padding:10px;display:none;}
-#menuCriar button,#menuPerfil p{width:100%;margin:5px 0;padding:5px;border:none;color:#ddd;background:#333;cursor:pointer;}
-</style>
+<title>Datuber</title>
 </head>
-<body>
 
-<header>
-  <h2>📺 Datuber</h2>
-  <input id="pesquisa" placeholder="Pesquisar..." style="padding:5px;border-radius:4px;border:1px solid #555;">
-  <div style="display:flex;gap:10px;align-items:center;">
-    <button onclick="abrirCriar()">➕</button>
-    <button onclick="irShorts()">🎬</button>
-    <button onclick="abrirLive()">🔴</button>
-    <img id="fotoPerfil" style="width:40px;border-radius:50%;cursor:pointer;">
-  </div>
-</header>
+<body style="margin:0;background:#111;color:white;font-family:Arial;">
 
-<div id="menuPerfil">
-  <p onclick="criarConta()">Criar Conta</p>
-  <p onclick="fazerLogin()">Login</p>
-  <p onclick="fazerLogout()">Sair</p>
-  <p onclick="abrirCanal()">Canal</p>
-  <p onclick="abrirStudio()">Estúdio</p>
-  <p onclick="mudarFoto()">Trocar Foto</p>
+<!-- HEADER -->
+<div style="display:flex;justify-content:space-between;background:#202020;padding:10px;">
+<h2>📺 Datuber</h2>
+
+<div>
+<button onclick="irHome()">🏠</button>
+<button onclick="irShorts()">🎬</button>
+<button onclick="abrirLive()">🔴</button>
+<button onclick="abrirCriar()">➕</button>
+<img id="foto" style="width:40px;border-radius:50%;cursor:pointer;">
+</div>
 </div>
 
-<div id="menuCriar">
-  <button onclick="postarVideo()">🎥 Vídeo</button>
+<!-- MENU -->
+<div id="menu" style="display:none;background:#222;position:absolute;right:10px;">
+<p onclick="criarConta()">Criar Conta</p>
+<p onclick="login()">Login</p>
+<p onclick="logout()">Sair</p>
+<p onclick="location='canal.html'">Canal</p>
+<p onclick="location='studio.html'">Studio</p>
+</div>
+
+<!-- CRIAR -->
+<div id="criar" style="display:none;background:#222;padding:10px;">
+<button onclick="postarVideo()">🎥 Vídeo</button>
+<button onclick="postarShort()">🎬 Shorts</button>
 </div>
 
 <hr>
-
 <div id="feed"></div>
 
 <script>
-// Dados iniciais
-let usuario = localStorage.getItem("user");
-document.getElementById("fotoPerfil").src = localStorage.getItem("foto")||"https://via.placeholder.com/40";
 
-// Funções de menu
-fotoPerfil.onclick = ()=> {
-  menuPerfil.style.display = menuPerfil.style.display=="block"?"none":"block";
-};
-function abrirCriar(){
-  menuCriar.style.display = (menuCriar.style.display=="block"?"none":"block");
-}
+// USER
+let user = localStorage.getItem("user") || "Você";
+foto.src = localStorage.getItem("foto") || "https://via.placeholder.com/40";
 
-// Conta/Login
-function criarConta(){
-  let n = prompt("Crie um nome de usuário:");
-  if(!n) return;
-  localStorage.setItem("user", n);
-  alert("Conta criada!");
-  location.reload();
-}
-function fazerLogin(){
-  let n = prompt("Usuário:");
-  if(n === usuario){
-    alert("Logado!");
-  } else {
-    alert("Usuário não cadastrado!");
-  }
-}
-function fazerLogout(){
-  localStorage.removeItem("user");
-  alert("Saiu da conta.");
-  location.reload();
-}
+// MENU
+foto.onclick=()=> menu.style.display = menu.style.display=="block"?"none":"block";
+function abrirCriar(){ criar.style.display = criar.style.display=="block"?"none":"block"; }
 
-// Navegação (placeholders para demo)
-function abrirCanal(){ location="canal.html"; }
-function abrirStudio(){ location="studio.html"; }
-function irShorts(){ location="shorts.html"; }
-function abrirLive(){ alert("Live não implementada (demo)"); }
+// LOGIN
+function criarConta(){ localStorage.setItem("user",prompt("Nome")); location.reload(); }
+function login(){ localStorage.setItem("user",prompt("Nome")); location.reload(); }
+function logout(){ localStorage.removeItem("user"); location.reload(); }
 
-// Web Storage
+// BASE
 function getVideos(){ return JSON.parse(localStorage.getItem("videos"))||[]; }
-function setVideos(v){ localStorage.setItem("videos", JSON.stringify(v)); }
 
-// Upload de vídeo (FileReader)【42†L282-L289】
+// POSTAR VIDEO
 function postarVideo(){
-  if(!usuario){ alert("Faça login para postar."); return;}
-  let inV = document.createElement("input"); inV.type="file"; inV.accept="video/*";
-  let inT = document.createElement("input"); inT.type="file"; inT.accept="image/*";
-  inV.click();
-  inV.onchange = ()=>{
-    if(!inV.files[0]) return;
-    inT.click();
-    inT.onchange = ()=>{
-      let tit = prompt("Título:");
-      let desc = prompt("Descrição:");
-      let readerV = new FileReader(), readerT = new FileReader();
-      readerV.onload = ()=>{
-        readerT.onload = ()=>{
-          let vids = getVideos();
-          vids.unshift({titulo: tit, desc: desc, video: readerV.result, thumb: readerT.result, dono: usuario, likes:0, dislikes:0, views:0, comentarios:[], inscritos:[]});
-          setVideos(vids);
-          alert("Vídeo postado!");
-          renderizarFeed();
-        };
-        readerT.readAsDataURL(inT.files[0]);
-      };
-      readerV.readAsDataURL(inV.files[0]);
-    };
-  };
+
+let v=document.createElement("input"); v.type="file"; v.accept="video/*";
+let t=document.createElement("input"); t.type="file"; t.accept="image/*";
+
+v.click();
+
+v.onchange=()=>{
+t.click();
+t.onchange=()=>{
+
+let titulo=prompt("Título");
+let desc=prompt("Descrição");
+
+let rv=new FileReader();
+let rt=new FileReader();
+
+rv.onload=()=>{
+rt.onload=()=>{
+
+let vids=getVideos();
+
+vids.unshift({
+titulo,desc,
+video:rv.result,
+thumb:rt.result,
+user,
+views:0,
+likes:0,
+comentarios:[]
+});
+
+localStorage.setItem("videos",JSON.stringify(vids));
+carregar();
+
+}
+rt.readAsDataURL(t.files[0]);
+}
+rv.readAsDataURL(v.files[0]);
+
+}
+}
 }
 
-// Renderiza feed de vídeos
-function renderizarFeed(){
-  let feed = document.getElementById("feed");
-  let lista = getVideos();
-  feed.innerHTML = "";
-  if(lista.length==0){ feed.innerHTML="<p>Nenhum vídeo disponível</p>"; return; }
-  lista.forEach((v,i) => {
-    feed.innerHTML += `
-<div class="videoCard" onclick="abrirVideo(${i})">
-  <img src="${v.thumb}">
-  <p><b>${v.titulo}</b></p>
-  <p>${v.dono}</p>
-  <p>${v.views} views</p>
-</div>`;
-  });
+// SHORTS
+function postarShort(){
+let v=document.createElement("input");
+v.type="file"; v.accept="video/*";
+
+v.click();
+
+v.onchange=()=>{
+let r=new FileReader();
+r.onload=()=>{
+let s=JSON.parse(localStorage.getItem("shorts"))||[];
+s.unshift({video:r.result});
+localStorage.setItem("shorts",JSON.stringify(s));
+alert("Short postado!");
 }
-renderizarFeed();
+r.readAsDataURL(v.files[0]);
+}
+}
 
-// Busca em tempo real
-pesquisa.oninput = (e) => {
-  let termo = e.target.value.toLowerCase();
-  let lista = getVideos();
-  let feed = document.getElementById("feed");
-  feed.innerHTML = "";
-  lista.forEach((v,i)=>{
-    if(v.titulo.toLowerCase().includes(termo)){
-      feed.innerHTML += `
-<div class="videoCard" onclick="abrirVideo(${i})">
-  <img src="${v.thumb}">
-  <p>${v.titulo}</p>
-</div>`;
-    }
-  });
-};
+// FEED
+function carregar(){
+let vids=getVideos();
+feed.innerHTML="";
 
-// Abre a página do vídeo
+vids.forEach((v,i)=>{
+feed.innerHTML+=`
+<div onclick="abrirVideo(${i})">
+<img src="${v.thumb}" width="250">
+<p>${v.titulo}</p>
+<p>${v.views} views</p>
+</div>
+`;
+});
+}
+
+// ABRIR VIDEO
 function abrirVideo(i){
-  localStorage.setItem("videoAtual", i);
-  location="video.html";
+localStorage.setItem("video",i);
+location="video.html";
 }
+
+// NAV
+function irHome(){ location.reload(); }
+function irShorts(){ location="shorts.html"; }
+function abrirLive(){ alert("Live em breve"); }
+
+carregar();
+
 </script>
 </body>
 </html>
-
