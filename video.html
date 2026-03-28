@@ -1,75 +1,49 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<title>Assistir Vídeo</title>
-<style> body{background:#111;color:white;font-family:Arial;text-align:center;} button{margin:5px;padding:5px 10px;}</style>
-</head>
-<body>
+<html>
+<body style="background:black;color:white;text-align:center;">
 
-<video id="player" controls></video><br><br>
-<button onclick="darLike()">👍 Like (<span id="likeCnt">0</span>)</button>
-<button onclick="darDislike()">👎 Dislike</button>
-<button onclick="compartilhar()">🔗 Compartilhar</button>
-<p id="viewCnt"></p>
-<h3>Comentários</h3>
-<button onclick="comentar()">Adicionar</button>
-<div id="coments"></div>
+<video id="v" controls width="80%"></video>
+
+<br>
+<button onclick="like()">👍</button>
+<button onclick="dislike()">👎</button>
+
+<p id="views"></p>
+
+<button onclick="coment()">Comentar</button>
+<div id="c"></div>
 
 <script>
-let vids = JSON.parse(localStorage.getItem("videos"))||[];
-let i = parseInt(localStorage.getItem("videoAtual"));
-if(!vids[i]){ document.body.innerHTML="<p>Vídeo não encontrado</p>"; }
-else {
-  let v = vids[i];
-  player.src = v.video;
-  // Atualiza views
-  v.views = (v.views||0) + 1;
-  localStorage.setItem("videos", JSON.stringify(vids));
-  viewCnt.innerText = v.views + " views";
 
-  // Like/Dislike (1 por usuário)
-  function darLike(){
-    if(!v.likedBy) v.likedBy = [];
-    if(!v.likedBy.includes(usuario)){
-      v.likedBy.push(usuario);
-      v.likes = (v.likes||0) + 1;
-      localStorage.setItem("videos", JSON.stringify(vids));
-      likeCnt.innerText = v.likes;
-    }
-  }
-  function darDislike(){
-    if(!v.dislikedBy) v.dislikedBy = [];
-    if(!v.dislikedBy.includes(usuario)){
-      v.dislikedBy.push(usuario);
-      v.dislikes = (v.dislikes||0) + 1;
-      localStorage.setItem("videos", JSON.stringify(vids));
-    }
-  }
+let vids=JSON.parse(localStorage.getItem("videos"))||[];
+let i=localStorage.getItem("video");
+let v=vids[i];
 
-  // Compartilhar
-  function compartilhar(){
-    navigator.clipboard.writeText(location.href);
-    alert("Link copiado!");
-  }
+v.views++;
+views.innerText=v.views+" views";
 
-  // Comentários
-  function comentar(){
-    let txt = prompt("Comentário:");
-    if(txt){
-      v.comentarios.push(txt);
-      localStorage.setItem("videos", JSON.stringify(vids));
-      mostrar();
-    }
-  }
-  function mostrar(){
-    coments.innerHTML = "";
-    v.comentarios.forEach(c=> coments.innerHTML += "<p>"+c+"</p>");
-  }
-  mostrar();
+document.getElementById("v").src=v.video;
+
+function salvar(){ localStorage.setItem("videos",JSON.stringify(vids)); }
+
+function like(){ v.likes++; salvar(); }
+function dislike(){ v.likes--; salvar(); }
+
+function coment(){
+let t=prompt("Comentário");
+v.comentarios.push(t);
+salvar();
+mostrar();
 }
-</script>
 
+function mostrar(){
+c.innerHTML="";
+v.comentarios.forEach(x=> c.innerHTML+="<p>"+x+"</p>");
+}
+
+mostrar();
+salvar();
+
+</script>
 </body>
 </html>
-
