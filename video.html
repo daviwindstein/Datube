@@ -4,46 +4,18 @@
 
 <video id="v" controls width="80%"></video>
 
-<br>
-<button onclick="like()">👍</button>
-<button onclick="dislike()">👎</button>
-
-<p id="views"></p>
-
-<button onclick="coment()">Comentar</button>
-<div id="c"></div>
-
 <script>
 
-let vids=JSON.parse(localStorage.getItem("videos"))||[];
-let i=localStorage.getItem("video");
-let v=vids[i];
+let videos = JSON.parse(localStorage.getItem("videos")) || [];
+let i = localStorage.getItem("video");
 
-v.views++;
-views.innerText=v.views+" views";
-
-document.getElementById("v").src=v.video;
-
-function salvar(){ localStorage.setItem("videos",JSON.stringify(vids)); }
-
-function like(){ v.likes++; salvar(); }
-function dislike(){ v.likes--; salvar(); }
-
-function coment(){
-let t=prompt("Comentário");
-v.comentarios.push(t);
-salvar();
-mostrar();
+if(videos[i]){
+document.getElementById("v").src = videos[i].video;
+}else{
+document.body.innerHTML = "Vídeo não encontrado";
 }
-
-function mostrar(){
-c.innerHTML="";
-v.comentarios.forEach(x=> c.innerHTML+="<p>"+x+"</p>");
-}
-
-mostrar();
-salvar();
 
 </script>
+
 </body>
 </html>
