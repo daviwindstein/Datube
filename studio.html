@@ -2,42 +2,29 @@
 <html>
 <body style="background:#111;color:white;">
 
-<h1>Studio</h1>
+<h2>Studio</h2>
 
-<div id="videos"></div>
+<p id="views"></p>
+<p id="videos"></p>
 
 <script>
 
-let user = localStorage.getItem("user");
-let lista = document.getElementById("videos");
-let videos = JSON.parse(localStorage.getItem("videos")) || [];
+let user=localStorage.getItem("user");
+let vids=JSON.parse(localStorage.getItem("videos"))||[];
 
-videos.forEach((v,i)=>{
-if(v.dono===user){
-lista.innerHTML+=`
-<div>
-<img src="${v.thumb}" width="200">
-<p>${v.titulo}</p>
-<button onclick="edit(${i})">✏️</button>
-<button onclick="del(${i})">🗑️</button>
-</div>`;
+let v=0;
+let total=0;
+
+vids.forEach(x=>{
+if(x.user==user){
+v+=x.views;
+total++;
 }
 });
 
-function edit(i){
-let n = prompt("Novo título:");
-videos[i].titulo=n;
-localStorage.setItem("videos", JSON.stringify(videos));
-location.reload();
-}
-
-function del(i){
-videos.splice(i,1);
-localStorage.setItem("videos", JSON.stringify(videos));
-location.reload();
-}
+views.innerText="Views: "+v;
+videos.innerText="Vídeos: "+total;
 
 </script>
-
 </body>
 </html>
