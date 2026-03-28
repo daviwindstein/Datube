@@ -1,60 +1,21 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8">
-<title>Canal</title>
-<style> body{background:#111;color:white;font-family:Arial;} #topo{display:flex;align-items:center;gap:10px;padding:10px;} #topo img{width:80px;border-radius:50%;} #videos{padding:10px;} .videoCard{margin:10px;cursor:pointer;} .videoCard img{width:200px;} button{padding:5px 10px;}</style>
-</head>
-<body>
+<html>
+<body style="background:#111;color:white;">
 
-<div id="topo">
-  <img id="fotoCanal" src="https://via.placeholder.com/80">
-  <div>
-    <h2 id="nomeCanal"></h2>
-    <p id="inscritos"></p>
-    <button id="btnInscrever">Inscrever</button>
-  </div>
-</div>
-
-<div id="videos"></div>
+<h2>Seu Canal</h2>
+<div id="v"></div>
 
 <script>
-let usuario = localStorage.getItem("user");
-if(!usuario){ alert("Faça login!"); location.href="index.html"; }
 
-fotoCanal.src = localStorage.getItem("foto")||"https://via.placeholder.com/80";
-nomeCanal.innerText = usuario;
+let user=localStorage.getItem("user");
+let vids=JSON.parse(localStorage.getItem("videos"))||[];
 
-// Carrega vídeos do canal
-let todos = JSON.parse(localStorage.getItem("videos"))||[];
-let canalVideos = todos.filter(v=>v.dono===usuario);
-let out="";
-canalVideos.forEach((v,i)=>{
-  let idx = todos.indexOf(v);
-  out+=`<div class="videoCard" onclick="abrirVideo(${idx})">
-    <img src="${v.thumb}">
-    <p>${v.titulo}</p>
-  </div>`;
-});
-videos.innerHTML = out;
-
-// Inscrição simples
-let subs = JSON.parse(localStorage.getItem("inscritos"))||[];
-inscritos.innerText = subs.length+" inscritos";
-btnInscrever.onclick = ()=>{
-  if(!subs.includes(usuario)){
-    subs.push(usuario);
-    localStorage.setItem("inscritos", JSON.stringify(subs));
-    alert("Inscrito!");
-    inscritos.innerText = subs.length+" inscritos";
-  }
-};
-
-function abrirVideo(i){
-  localStorage.setItem("videoAtual",i);
-  location="video.html";
+vids.forEach(x=>{
+if(x.user==user){
+v.innerHTML+=`<p>${x.titulo}</p>`;
 }
-</script>
+});
 
+</script>
 </body>
 </html>
