@@ -4,16 +4,42 @@
 
 <video id="v" controls width="80%"></video>
 
+<br>
+<button onclick="like()">👍</button>
+<button onclick="compartilhar()">🔗</button>
+
+<p id="views"></p>
+
 <script>
 
-let videos = JSON.parse(localStorage.getItem("videos")) || [];
+let vids = JSON.parse(localStorage.getItem("videos"))||[];
 let i = localStorage.getItem("video");
+let v = vids[i];
 
-if(videos[i]){
-document.getElementById("v").src = videos[i].video;
-}else{
-document.body.innerHTML = "Vídeo não encontrado";
+document.getElementById("v").src = v.video;
+
+// VIEW
+v.views++;
+views.innerText = v.views + " views";
+
+function salvar(){
+localStorage.setItem("videos",JSON.stringify(vids));
 }
+
+// LIKE
+function like(){
+v.likes++;
+salvar();
+}
+
+// COMPARTILHAR
+function compartilhar(){
+let link = location.href;
+navigator.clipboard.writeText(link);
+alert("Link copiado!");
+}
+
+salvar();
 
 </script>
 
