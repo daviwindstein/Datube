@@ -5,150 +5,94 @@
 <title>Datuber</title>
 </head>
 
-<body style="margin:0;background:#111;color:white;font-family:Arial;">
+<body style="background:#111;color:white;font-family:Arial;">
 
-<!-- HEADER -->
-<div style="display:flex;justify-content:space-between;background:#202020;padding:10px;">
 <h2>📺 Datuber</h2>
 
-<div>
-<button onclick="irHome()">🏠</button>
-<button onclick="irShorts()">🎬</button>
-<button onclick="abrirLive()">🔴</button>
-<button onclick="abrirCriar()">➕</button>
-<img id="foto" style="width:40px;border-radius:50%;cursor:pointer;">
-</div>
-</div>
-
-<!-- MENU -->
-<div id="menu" style="display:none;background:#222;position:absolute;right:10px;">
-<p onclick="criarConta()">Criar Conta</p>
-<p onclick="login()">Login</p>
-<p onclick="logout()">Sair</p>
-<p onclick="location='canal.html'">Canal</p>
-<p onclick="location='studio.html'">Studio</p>
-</div>
-
-<!-- CRIAR -->
-<div id="criar" style="display:none;background:#222;padding:10px;">
-<button onclick="postarVideo()">🎥 Vídeo</button>
-<button onclick="postarShort()">🎬 Shorts</button>
-</div>
+<button onclick="postar()">Postar vídeo</button>
 
 <hr>
+
 <div id="feed"></div>
 
 <script>
 
-// USER
-let user = localStorage.getItem("user") || "Você";
-foto.src = localStorage.getItem("foto") || "https://via.placeholder.com/40";
+// PEGAR VIDEOS
+function getVideos(){
+return JSON.parse(localStorage.getItem("videos")) || [];
+}
 
-// MENU
-foto.onclick=()=> menu.style.display = menu.style.display=="block"?"none":"block";
-function abrirCriar(){ criar.style.display = criar.style.display=="block"?"none":"block"; }
+// SALVAR
+function setVideos(v){
+localStorage.setItem("videos", JSON.stringify(v));
+}
 
-// LOGIN
-function criarConta(){ localStorage.setItem("user",prompt("Nome")); location.reload(); }
-function login(){ localStorage.setItem("user",prompt("Nome")); location.reload(); }
-function logout(){ localStorage.removeItem("user"); location.reload(); }
+// POSTAR VIDEO (FUNCIONA MESMO)
+function postar(){
 
-// BASE
-function getVideos(){ return JSON.parse(localStorage.getItem("videos"))||[]; }
+let input = document.createElement("input");
+input.type="file";
+input.accept="video/*";
 
-// POSTAR VIDEO
-function postarVideo(){
+input.onchange = () => {
 
-let v=document.createElement("input"); v.type="file"; v.accept="video/*";
-let t=document.createElement("input"); t.type="file"; t.accept="image/*";
+let file = input.files[0];
+if(!file) return;
 
-v.click();
+let titulo = prompt("Título:");
 
-v.onchange=()=>{
-t.click();
-t.onchange=()=>{
+let url = URL.createObjectURL(file);
 
-let titulo=prompt("Título");
-let desc=prompt("Descrição");
+let videos = getVideos();
 
-let rv=new FileReader();
-let rt=new FileReader();
-
-rv.onload=()=>{
-rt.onload=()=>{
-
-let vids=getVideos();
-
-vids.unshift({
-titulo,desc,
-video:rv.result,
-thumb:rt.result,
-user,
-views:0,
-likes:0,
-comentarios:[]
+videos.unshift({
+titulo: titulo,
+video: url,
+views: 0
 });
 
-localStorage.setItem("videos",JSON.stringify(vids));
+setVideos(videos);
+
+alert("Vídeo postado!");
 carregar();
 
-}
-rt.readAsDataURL(t.files[0]);
-}
-rv.readAsDataURL(v.files[0]);
+};
 
-}
-}
+input.click();
 }
 
-// SHORTS
-function postarShort(){
-let v=document.createElement("input");
-v.type="file"; v.accept="video/*";
-
-v.click();
-
-v.onchange=()=>{
-let r=new FileReader();
-r.onload=()=>{
-let s=JSON.parse(localStorage.getItem("shorts"))||[];
-s.unshift({video:r.result});
-localStorage.setItem("shorts",JSON.stringify(s));
-alert("Short postado!");
-}
-r.readAsDataURL(v.files[0]);
-}
-}
-
-// FEED
+// MOSTRAR VIDEOS
 function carregar(){
-let vids=getVideos();
-feed.innerHTML="";
 
-vids.forEach((v,i)=>{
-feed.innerHTML+=`
-<div onclick="abrirVideo(${i})">
-<img src="${v.thumb}" width="250">
+let feed = document.getElementById("feed");
+let videos = getVideos();
+
+feed.innerHTML = "";
+
+if(videos.length === 0){
+feed.innerHTML = "<p>Nenhum vídeo ainda</p>";
+return;
+}
+
+videos.forEach((v,i)=>{
+feed.innerHTML += `
+<div onclick="abrir(${i})" style="margin:20px;cursor:pointer;">
 <p>${v.titulo}</p>
-<p>${v.views} views</p>
+<video src="${v.video}" width="250"></video>
 </div>
 `;
 });
 }
 
 // ABRIR VIDEO
-function abrirVideo(i){
-localStorage.setItem("video",i);
-location="video.html";
+function abrir(i){
+localStorage.setItem("video", i);
+location = "video.html";
 }
-
-// NAV
-function irHome(){ location.reload(); }
-function irShorts(){ location="shorts.html"; }
-function abrirLive(){ alert("Live em breve"); }
 
 carregar();
 
 </script>
+
 </body>
 </html>
