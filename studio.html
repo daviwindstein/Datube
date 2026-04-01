@@ -4,27 +4,28 @@
 
 <h2>Studio</h2>
 
-<p id="views"></p>
-<p id="videos"></p>
+<p id="v"></p>
+<p id="l"></p>
 
 <script>
 
-let user=localStorage.getItem("user");
-let vids=JSON.parse(localStorage.getItem("videos"))||[];
+let user = localStorage.getItem("user");
+let vids = JSON.parse(localStorage.getItem("videos"))||[];
 
-let v=0;
-let total=0;
+let views=0;
+let likes=0;
 
 vids.forEach(x=>{
 if(x.user==user){
-v+=x.views;
-total++;
+views+=x.views;
+likes+=x.likes;
 }
 });
 
-views.innerText="Views: "+v;
-videos.innerText="Vídeos: "+total;
+document.getElementById("v").innerText="Views: "+views;
+document.getElementById("l").innerText="Likes: "+likes;
 
 </script>
+
 </body>
 </html>
