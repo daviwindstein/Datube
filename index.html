@@ -3,89 +3,136 @@
 <head>
 <meta charset="UTF-8">
 <title>Datuber</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js"></script>
 </head>
 
-<body style="background:#111;color:white;font-family:Arial;">
+<body style="margin:0;background:#111;color:white;font-family:Arial;">
 
+<!-- HEADER -->
+<div style="display:flex;justify-content:space-between;background:#202020;padding:10px;align-items:center;">
 <h2>📺 Datuber</h2>
 
+<div>
 <button onclick="home()">🏠</button>
-<button onclick="shorts()">🎬</button>
+<button onclick="irShorts()">🎬</button>
 <button onclick="live()">🔴</button>
 <button onclick="abrirCriar()">➕</button>
+<img id="foto" style="width:40px;height:40px;border-radius:50%;cursor:pointer;">
+</div>
+</div>
 
-<img id="foto" style="width:40px;border-radius:50%;cursor:pointer;">
-
-<div id="menu" style="display:none;background:#222;position:absolute;">
-<p onclick="login()">Login</p>
+<!-- MENU -->
+<div id="menu" style="display:none;background:#222;position:absolute;right:10px;padding:10px;">
 <p onclick="criarConta()">Criar Conta</p>
-<p onclick="canal()">Canal</p>
-<p onclick="studio()">Studio</p>
-<p onclick="mudarFoto()">Foto</p>
+<p onclick="login()">Login</p>
+<p onclick="logout()">Sair</p>
+<p onclick="irCanal()">Meu Canal</p>
+<p onclick="irStudio()">Studio</p>
 <p onclick="idioma()">Idioma</p>
 </div>
 
-<div id="criar" style="display:none;">
-<button onclick="postar()">🎥 Vídeo</button>
-<button onclick="postarShort()">🎬 Shorts</button>
-<button onclick="postarPost()">📝 Post</button>
+<!-- CRIAR -->
+<div id="criar" style="display:none;background:#222;padding:10px;">
+<button onclick="postarVideo()">🎥 Vídeo</button>
 </div>
 
 <hr>
+
 <div id="feed"></div>
 
 <script>
 
-// 🔥 CONFIGURA AQUI
-const supabase = supabase.createClient(
-"COLE_SUA_URL_AQUI",
-"COLE_SUA_KEY_AQUI"
-);
+// USER
+let user = localStorage.getItem("user") || "Você";
+let foto = localStorage.getItem("foto") || "https://via.placeholder.com/40";
+document.getElementById("foto").src = foto;
 
 // MENU
-foto.onclick=()=> menu.style.display = menu.style.display=="block"?"none":"block";
-function abrirCriar(){ criar.style.display = criar.style.display=="block"?"none":"block"; }
+document.getElementById("foto").onclick = ()=>{
+let m = document.getElementById("menu");
+m.style.display = m.style.display=="block"?"none":"block";
+};
 
-// LOGIN SIMPLES
-function login(){ localStorage.setItem("user",prompt("Nome")); }
-function criarConta(){ login(); }
+function abrirCriar(){
+let c = document.getElementById("criar");
+c.style.display = c.style.display=="block"?"none":"block";
+}
 
-// POSTAR VIDEO REAL
-async function postar(){
+// LOGIN
+function criarConta(){
+let n = prompt("Nome:");
+localStorage.setItem("user",n);
+location.reload();
+}
+function login(){
+let n = prompt("Nome:");
+localStorage.setItem("user",n);
+location.reload();
+}
+function logout(){
+localStorage.removeItem("user");
+location.reload();
+}
+
+// NAV
+function home(){ location.reload(); }
+function irShorts(){ alert("shorts em breve"); }
+function live(){ alert("live em breve"); }
+function irCanal(){ location="canal.html"; }
+function irStudio(){ location="studio.html"; }
+function idioma(){ alert("PT / EN"); }
+
+// BASE
+function getVideos(){
+return JSON.parse(localStorage.getItem("videos")) || [];
+}
+
+// POSTAR VIDEO
+function postarVideo(){
 
 let input = document.createElement("input");
 input.type="file";
 input.accept="video/*";
 
-input.onchange = async ()=>{
+input.onchange = ()=>{
 
 let file = input.files[0];
 if(!file) return;
 
+let thumbInput = document.createElement("input");
+thumbInput.type="file";
+thumbInput.accept="image/*";
+
+thumbInput.onchange = ()=>{
+
 let titulo = prompt("Título:");
+let desc = prompt("Descrição:");
 
-let nome = Date.now()+"_"+file.name;
+let videoURL = URL.createObjectURL(file);
+let thumbURL = URL.createObjectURL(thumbInput.files[0]);
 
-// UPLOAD
-await supabase.storage.from("videos").upload(nome, file);
-
-// LINK
-let { data } = supabase.storage.from("videos").getPublicUrl(nome);
-
-let videos = JSON.parse(localStorage.getItem("videos"))||[];
+let videos = getVideos();
 
 videos.unshift({
 titulo,
-video:data.publicUrl,
+desc,
+video:videoURL,
+thumb:thumbURL,
+user,
 views:0,
-likes:0
+likes:0,
+comentarios:[]
 });
 
 localStorage.setItem("videos",JSON.stringify(videos));
 
+alert("Postado!");
 carregar();
-}
+
+};
+
+thumbInput.click();
+
+};
 
 input.click();
 }
@@ -93,34 +140,33 @@ input.click();
 // FEED
 function carregar(){
 
-let videos = JSON.parse(localStorage.getItem("videos"))||[];
+let feed = document.getElementById("feed");
+let videos = getVideos();
 
-feed.innerHTML="";
+feed.innerHTML = "";
+
+if(videos.length==0){
+feed.innerHTML="<p>Nenhum vídeo</p>";
+return;
+}
 
 videos.forEach((v,i)=>{
-feed.innerHTML+=`
-<div onclick="abrirVideo(${i})">
+feed.innerHTML += `
+<div onclick="abrirVideo(${i})" style="margin:10px;cursor:pointer;">
+<img src="${v.thumb}" width="250">
 <p>${v.titulo}</p>
-<video src="${v.video}" width="250"></video>
+<p>${v.views} views</p>
 </div>
 `;
 });
+
 }
 
 // ABRIR
 function abrirVideo(i){
-localStorage.setItem("video",i);
+localStorage.setItem("videoAtual",i);
 location="video.html";
 }
-
-// OUTROS
-function home(){ location.reload(); }
-function shorts(){ alert("shorts em breve"); }
-function live(){ alert("live em breve"); }
-function canal(){ alert("canal em breve"); }
-function studio(){ alert("studio em breve"); }
-function mudarFoto(){ alert("em breve"); }
-function idioma(){ alert("PT/EN"); }
 
 carregar();
 
