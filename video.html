@@ -6,22 +6,31 @@
 
 <br>
 <button onclick="like()">👍</button>
-<button onclick="compartilhar()">🔗</button>
+<button onclick="share()">🔗</button>
 
 <p id="views"></p>
+
+<button onclick="coment()">Comentar</button>
+<div id="com"></div>
 
 <script>
 
 let vids = JSON.parse(localStorage.getItem("videos"))||[];
-let i = localStorage.getItem("video");
+let i = localStorage.getItem("videoAtual");
 let v = vids[i];
 
+if(!v){
+document.body.innerHTML="Vídeo não encontrado";
+}
+
+// PLAY
 document.getElementById("v").src = v.video;
 
 // VIEW
 v.views++;
-views.innerText = v.views + " views";
+document.getElementById("views").innerText = v.views+" views";
 
+// SALVAR
 function salvar(){
 localStorage.setItem("videos",JSON.stringify(vids));
 }
@@ -32,13 +41,30 @@ v.likes++;
 salvar();
 }
 
-// COMPARTILHAR
-function compartilhar(){
-let link = location.href;
-navigator.clipboard.writeText(link);
+// SHARE
+function share(){
+navigator.clipboard.writeText(location.href);
 alert("Link copiado!");
 }
 
+// COMENT
+function coment(){
+let t = prompt("Comentário:");
+v.comentarios.push(t);
+salvar();
+mostrar();
+}
+
+// MOSTRAR
+function mostrar(){
+let c = document.getElementById("com");
+c.innerHTML="";
+v.comentarios.forEach(x=>{
+c.innerHTML += "<p>"+x+"</p>";
+});
+}
+
+mostrar();
 salvar();
 
 </script>
