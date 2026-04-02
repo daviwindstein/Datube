@@ -87,50 +87,51 @@ return JSON.parse(localStorage.getItem("videos")) || [];
 }
 
 // POSTAR VIDEO
-function postarVideo(){
+async function postarVideo(){
 
 let input = document.createElement("input");
-input.type="file";
-input.accept="video/*";
+input.type = "file";
+input.accept = "video/*";
 
-input.onchange = ()=>{
+input.onchange = async () => {
 
 let file = input.files[0];
 if(!file) return;
 
-let thumbInput = document.createElement("input");
-thumbInput.type="file";
-thumbInput.accept="image/*";
-
-thumbInput.onchange = ()=>{
-
 let titulo = prompt("Título:");
 let desc = prompt("Descrição:");
 
-let videoURL = URL.createObjectURL(file);
-let thumbURL = URL.createObjectURL(thumbInput.files[0]);
+let formData = new FormData();
+formData.append("file", file);
+formData.append("upload_preset", "SEU_PRESET_AQUI");
 
-let videos = getVideos();
+let res = await fetch("https://api.cloudinary.com/v1_1/SEU_CLOUD_NAME/video/upload", {
+method: "POST",
+body: formData
+});
+
+let data = await res.json();
+
+// 🔥 LINK REAL DO VIDEO
+let url = data.secure_url;
+
+let videos = JSON.parse(localStorage.getItem("videos")) || [];
 
 videos.unshift({
 titulo,
 desc,
-video:videoURL,
-thumb:thumbURL,
-user,
+video: url,
+thumb: url, // pode melhorar depois
+user: localStorage.getItem("user") || "Você",
 views:0,
 likes:0,
 comentarios:[]
 });
 
-localStorage.setItem("videos",JSON.stringify(videos));
+localStorage.setItem("videos", JSON.stringify(videos));
 
-alert("Postado!");
-carregar();
-
-};
-
-thumbInput.click();
+alert("Vídeo postado!");
+location.reload();
 
 };
 
